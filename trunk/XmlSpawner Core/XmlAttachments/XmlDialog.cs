@@ -912,7 +912,7 @@ namespace Server.Engines.XmlSpawner2
 
             if (typeName == "GUMP")
             {
-                BaseXmlSpawner.SpawnTypeKeyword(this, TheSpawn, typeName, substitutedtypeName, true, mob, loc, map, new XmlGumpCallback(DialogGumpCallback), out status_str);
+                BaseXmlSpawner.SpawnTypeKeyword(this, TheSpawn, typeName, substitutedtypeName, true, mob, loc, map, new XmlGumpCallback(DialogGumpCallback), out status_str, 0);
                 // hold processing until the gump response is completed
 
                 m_HoldProcessing = true;
