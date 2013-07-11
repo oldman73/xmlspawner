@@ -1,3 +1,75 @@
+XmlSpawner2 v4.0
+updated 11/7/2013
+Fwiffo
+
+FIX
+null reference in XmlFind fix;
+Major update, removing references to object types and using generic type when possible, fixed possible stack overflows in a case as this:
+Spawner1 Entry1 : SPAWN,Spawner2,1
+Spawner2 Entry1 : SPAWN,Spawner1,1
+
+this is an absurd case, but if you're making LARGE use of IF/SPAWN/WHILE it CAN happen since the primary call always continues to run without returning a value, in some cases, making excessive use of recursive call, if that generally happens, I've put in a check that allows a max of 10 recursive calls, and then throws the error in the spawner/activator object, specifyng who caused the error, without a server crash.
+
+Other bugfixes where made in the meantime, some required major changes in the structure, but compatibility with older xmlspawner system was always the first thing in mind, so no changes are required on the user side.
+
+MODIFYCATIONS
+The GET Keyword, used inside an XMLSPAWNER, can get the property of the SETITEM, if that is set, in a way like this:
+
+GET,SETITEM,property by using SETITEM capitalized, if you use Setitem or setitem, it will work like in the old way, will search for the item name. This is to speedup uses of the setitem in conditional/complicated spawners that make use of the SETITEM, allowing to get properties on them easily.
+
+OLD command AMOUNTCARRIED,itemtype -- NEW is AMOUNTCARRIED,itemtype[[,banksearch],itemname] (it can check for name, in bank, and always counts even amount of equal unstackable items carried or in bank)
+
+OLD command SETONTHIS/prop/value/prop2/value2/prop3/value3/.. -- NEW is SETONTHIS[,proptest=value]/prop/value/prop2/value2/prop3/value3/.. doing a proptest for speed in execution of a check before set inside spawner or elsewhere.
+
+SUMMARY
+Most of us, at least the ones that try to use the xmlspawner with most of it's functionality, have faced the truth when they found that there isn't any way to set a long string with slashes and special chars without getting into trouble, not counting that maybe you need to continue to set other properties (spawning a lever that does many actions, a custom text, a spawner that spawns a spawner that spawns a spawner...well the last is kinda absurd...but anyway...).
+The Literal terminator is defined in BaseXmlSpawner.cs via a static char, and is the char '§', you can change it to whatever you want.
+
+Example of literal termination:
+
+in spawner book:
+simplelever/target1property/@this/is/a/long/string/with/slashes§target2property/simplestring
+
+remember not to put a / right after the §, there is no need for that!
+-----
+Added modifier FACETO usable in conjunction with mobiles, to make turn easily in a direction or other mob or item
+Syntax is FACETO,x,y
+Example: FACETO,{GETONTRIGMOB,x},{GETONTRIGMOB,y}
+will turn to the mobile that trigged the event. Very useful in conjunction with xmlquesters or with proximity activated spawns or in conjunction with the use of FOREACH (see below).
+-----
+Added FOREACH usable in spawner as well as other items that use this system.
+Syntax is FOREACH,objecttype[,name][,range]/action OR /prop/value/prop/value
+
+objecttype is the type of the object that you're searching, for example if you're searching only Horse, and don't really care for the name, in a range of three from the activator, that could be the spawner or something else, then the syntax would be:
+FOREACH,horse,,3/DAMAGE,100/Name/Plumb to make 100 damage to any horse in 3 range and rename them to Plumb.
+
+If you're using from a spawner, and you want to use the spawn area of the spawner itself, or the region area present, if the regionname is set and there is a valid region with that name, you have to omit the range value, for example this command:
+FOREACH,playermobile,bobo/EFFECT,14000,13/DAMAGE,100
+
+will create an exploding effect to any player in the spawn range of the spawner that activated it, but only to those named "bobo" (it's case sensitive, so be careful!).
+
+This can be used on ITEMS TOO!
+I warn you, this command, if used not wisely, can cause A LOT of LAG, so use it knowing what you're doing!
+-----
+Added FLASH, where the mobile, only players of course, will get a flash effect
+Syntax is FLASH,int (from 1 to 5, checked if you do it wrong)
+1 is fade to black
+2 is fade to white
+3 is light flash
+4 is light to black flash
+5 is black flash
+
+You can use this in conjunction with foreach, modifiers on playermobiles or situation where the use is admitted, this is self explanatory.
+-----
+Added PRIVMSG, to show a message only to a particular mobile over his head (only PLAYERS)
+
+Syntax is PRIVMSG[,probability][,hue]
+If the object is a mobile actively connected display the message, it works like the SENDMSG;
+
+--------------------------------------------
+OLD MODS used for reference
+--------------------------------------------
+
 XmlSpawner2 v3.24
 updated 2/11/08
 ArteGordon
