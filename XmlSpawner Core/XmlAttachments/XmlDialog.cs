@@ -1270,7 +1270,7 @@ namespace Server.Engines.XmlSpawner2
             ResponseString = speech;
 
             // the player that successfully activates a conversation by speech becomes the exclusive conversationalist until the npc resets
-            if (speech != null && m != null)
+            if ((speech != null || LockConversation) && m != null)
                 m_ActivePlayer = m;
 
             // calculate the delay before activating the entry

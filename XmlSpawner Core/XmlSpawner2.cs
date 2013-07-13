@@ -10147,7 +10147,7 @@ public static void _TraceEnd(int index)
 		{
 			get
 			{
-				return new Rectangle2D(m_X, m_Y, m_Width, m_Height);
+				return new Rectangle2D(m_X, m_Y, m_Width + 1, m_Height + 1);
 			}
 		}
 
