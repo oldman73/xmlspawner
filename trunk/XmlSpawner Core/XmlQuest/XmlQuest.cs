@@ -173,9 +173,9 @@ namespace Server.Items
             if (e == null || e.Mobile == null) return;
             Mobile from = e.Mobile;
 
-            from.CloseGump(typeof(QuestLogGump));
+            from.CloseGump(typeof(XMLQuestLogGump));
             // bring up the quest status gump
-            from.SendGump(new QuestLogGump(from));
+            from.SendGump(new XMLQuestLogGump(from));
 
             // bring up the normal quest objectives gump
             //NormalQuestButton(from as PlayerMobile);
@@ -187,9 +187,9 @@ namespace Server.Items
             if (state == null || state.Mobile == null) return;
             Mobile from = state.Mobile;
 
-            from.CloseGump(typeof(QuestLogGump));
+            from.CloseGump(typeof(XMLQuestLogGump));
             // bring up the quest status gump
-            from.SendGump(new QuestLogGump(from));
+            from.SendGump(new XMLQuestLogGump(from));
 
             // bring up the normal quest objectives gump
             //NormalQuestButton(from as PlayerMobile);

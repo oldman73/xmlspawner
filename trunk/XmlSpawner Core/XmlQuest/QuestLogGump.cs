@@ -13,7 +13,7 @@ using Server.Engines.XmlSpawner2;
 //
 namespace Server.Gumps
 {
-	public class QuestLogGump : Gump
+	public class XMLQuestLogGump : Gump
 	{
 		private Mobile m_From;
 
@@ -60,7 +60,7 @@ namespace Server.Gumps
 		}
 
 
-		public QuestLogGump( Mobile from ) : this( from, 0, null )
+		public XMLQuestLogGump( Mobile from ) : this( from, 0, null )
 		{
 		}
 
@@ -78,14 +78,14 @@ namespace Server.Gumps
 				case 2: // Previous page
 				{
 					if ( m_Page > 0 )
-						m_From.SendGump( new QuestLogGump( m_From, m_Page - 1, m_List ) );
+						m_From.SendGump( new XMLQuestLogGump( m_From, m_Page - 1, m_List ) );
 
 					return;
 				}
 				case 3: // Next page
 				{
 					if ( GetIndexForPage( m_Page + 1 ) < m_List.Count )
-						m_From.SendGump( new QuestLogGump( m_From, m_Page + 1, m_List ) );
+						m_From.SendGump( new XMLQuestLogGump( m_From, m_Page + 1, m_List ) );
 
 					break;
 				}
@@ -115,7 +115,7 @@ namespace Server.Gumps
                             IXmlQuest o = m_List[index] as IXmlQuest;
     
                             if(o != null && !o.Deleted){
-                                m_From.SendGump( new QuestLogGump( m_From, m_Page, null ) );
+                                m_From.SendGump( new XMLQuestLogGump( m_From, m_Page, null ) );
                                 m_From.CloseGump( typeof( XmlQuestStatusGump ) );
                                 m_From.SendGump( new XmlQuestStatusGump(o, o.TitleString, 320, 0, true) );
                             }
@@ -128,11 +128,11 @@ namespace Server.Gumps
 		}
 
 
-		public QuestLogGump( Mobile from, int page, ArrayList list ) : base( 12, 24 )
+		public XMLQuestLogGump( Mobile from, int page, ArrayList list ) : base( 12, 24 )
 		{
 			if(from == null) return;
 
-			from.CloseGump( typeof( QuestLogGump ) );
+			from.CloseGump( typeof( XMLQuestLogGump ) );
 
 			XmlQuestPoints p = (XmlQuestPoints)XmlAttach.FindAttachment(from, typeof(XmlQuestPoints));
 
