@@ -2938,7 +2938,7 @@ namespace Server.Mobiles
 
 								if (value_keywordargs.Length > 1)
 								{
-									string typestr = value_keywordargs[1], namestr=null;
+									string typestr = value_keywordargs[1], namestr="*";
 									bool banksearch = false;
 									if(value_keywordargs.Length > 2)
 									{
@@ -2962,7 +2962,7 @@ namespace Server.Mobiles
 
 										for ( int i = 0; i < items.Length; ++i )
 										{
-											if(namestr==null || items[i].Name==namestr)
+											if(CheckNameMatch(namestr, items[i].Name))
 												amount += items[i].Amount;
 										}
 										if(banksearch && trigmob.BankBox!=null)
@@ -2970,7 +2970,7 @@ namespace Server.Mobiles
 											items = trigmob.BankBox.FindItemsByType( targetType, true );
 											for ( int i = 0; i < items.Length; ++i )
 											{
-												if(namestr==null || items[i].Name==namestr)
+												if(CheckNameMatch(namestr, items[i].Name))
 													amount += items[i].Amount;
 											}
 										}
@@ -3007,20 +3007,20 @@ namespace Server.Mobiles
 								// count nearby players
 								if (refobject is Item)
 								{
-									IPooledEnumerable ie = ((Item)refobject).GetMobilesInRange(range);
+									IPooledEnumerable ie = ((Item)refobject).GetClientsInRange(range);
 									foreach (Mobile p in ie )
 									{
-										if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
+										if (p.AccessLevel == AccessLevel.Player) nplayers++;
 									}
 									ie.Free();
 								}
 								else
 									if (refobject is Mobile)
 									{
-										IPooledEnumerable ie = ((Mobile)refobject).GetMobilesInRange(range);
+										IPooledEnumerable ie = ((Mobile)refobject).GetClientsInRange(range);
 										foreach (Mobile p in ie)
 										{
-											if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
+											if (p.AccessLevel == AccessLevel.Player) nplayers++;
 										}
 										ie.Free();
 									}
@@ -4580,7 +4580,7 @@ namespace Server.Mobiles
 							string typestr = arglist[1];
 							if (typestr != null)
 							{
-								string namestr=null;
+								string namestr="*";
 								bool banksearch = false;
 								if(arglist.Length > 2)
 								{
@@ -4603,7 +4603,7 @@ namespace Server.Mobiles
 
 									for ( int i = 0; i < items.Length; ++i )
 									{
-										if(namestr==null || items[i].Name==namestr)
+										if(CheckNameMatch(namestr, items[i].Name))
 											amount += items[i].Amount;
 									}
 									if(banksearch && trigmob.BankBox!=null)
@@ -4611,7 +4611,7 @@ namespace Server.Mobiles
 										items = trigmob.BankBox.FindItemsByType( targetType, true );
 										for ( int i = 0; i < items.Length; ++i )
 										{
-											if(namestr==null || items[i].Name==namestr)
+											if(CheckNameMatch(namestr, items[i].Name))
 												amount += items[i].Amount;
 										}
 									}
@@ -4634,25 +4634,24 @@ namespace Server.Mobiles
 							// count nearby players
 							if (o is Item)
 							{
-								IPooledEnumerable ie = ((Item)o).GetMobilesInRange(range);
+								IPooledEnumerable ie = ((Item)o).GetClientsInRange(range);
 								foreach (Mobile p in ie)
 								{
-									if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
+									if (p.AccessLevel == AccessLevel.Player) nplayers++;
 								}
 								ie.Free();
 							}
 							else if (o is Mobile)
 							{
-								IPooledEnumerable ie = ((Mobile)o).GetMobilesInRange(range);
+								IPooledEnumerable ie = ((Mobile)o).GetClientsInRange(range);
 								foreach (Mobile p in ie)
 								{
-									if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
+									if (p.AccessLevel == AccessLevel.Player) nplayers++;
 								}
 								ie.Free();
 							}
 
 							return nplayers.ToString();
-
 						}
 						else if ((kw == valueKeyword.TRIGSKILL) && arglist.Length > 1)
 						{
@@ -8807,7 +8806,7 @@ namespace Server.Mobiles
 								if(objecttype != null)
 								{
 									int range = -1;
-									string objectname = null;
+									string objectname = "*";
 									if(objstr.Length > 2)
 									{
 										objectname = objstr[2];
@@ -8830,7 +8829,7 @@ namespace Server.Mobiles
 											{
 												foreach(Mobile m in spawner.SpawnRegion.GetMobiles())
 												{
-													if(objecttype.IsAssignableFrom(m.GetType()) && (string.IsNullOrEmpty(objectname) || m.Name==objectname))
+													if(objecttype.IsAssignableFrom(m.GetType()) && CheckNameMatch(objectname, m.Name))
 														mobs.Add(m);
 												}
 											}
@@ -8838,7 +8837,7 @@ namespace Server.Mobiles
 											{
 												foreach(Mobile m in map.GetMobilesInBounds(spawner.SpawnerBounds))
 												{
-													if(objecttype.IsAssignableFrom(m.GetType()) && (string.IsNullOrEmpty(objectname) || m.Name==objectname))
+													if(objecttype.IsAssignableFrom(m.GetType()) && CheckNameMatch(objectname, m.Name))
 													{
 														mobs.Add(m);
 													}
@@ -8849,7 +8848,7 @@ namespace Server.Mobiles
 										{
 											foreach(Mobile m in map.GetMobilesInRange(((IEntity)invoker).Location, range))
 											{
-												if(objecttype.IsAssignableFrom(m.GetType()) && (string.IsNullOrEmpty(objectname) || m.Name==objectname))
+												if(objecttype.IsAssignableFrom(m.GetType()) && CheckNameMatch(objectname, m.Name))
 													mobs.Add(m);
 											}
 										}
@@ -8868,7 +8867,7 @@ namespace Server.Mobiles
 											{
 												foreach(Item i in GetItems(spawner.SpawnRegion))
 												{
-													if(objecttype.IsAssignableFrom(i.GetType()) && (string.IsNullOrEmpty(objectname) || i.Name==objectname))
+													if(objecttype.IsAssignableFrom(i.GetType()) && CheckNameMatch(objectname, i.Name))
 														items.Add(i);
 												}
 											}
@@ -8876,7 +8875,7 @@ namespace Server.Mobiles
 											{
 												foreach(Item i in map.GetItemsInBounds(spawner.SpawnerBounds))
 												{
-													if(objecttype.IsAssignableFrom(i.GetType()) && (string.IsNullOrEmpty(objectname) || i.Name==objectname))
+													if(objecttype.IsAssignableFrom(i.GetType()) && CheckNameMatch(objectname, i.Name))
 														items.Add(i);
 												}
 											}
@@ -8885,7 +8884,7 @@ namespace Server.Mobiles
 										{
 											foreach(Item i in map.GetItemsInRange(((IEntity)invoker).Location, range))
 											{
-												if(objecttype.IsAssignableFrom(i.GetType()) && (string.IsNullOrEmpty(objectname) || i.Name==objectname))
+												if(objecttype.IsAssignableFrom(i.GetType()) && CheckNameMatch(objectname, i.Name))
 													items.Add(i);
 											}
 										}
@@ -9021,20 +9020,20 @@ namespace Server.Mobiles
 						}
 					case typeKeyword.SETONPETS:
 						{
-							// the syntax is SETONPETS,range/prop/value/prop/value...
+							// the syntax is SETONPETS,range[,name]/prop/value/prop/value...
 
 							string[] arglist = ParseSlashArgs(substitutedtypeName, 3);
 							string typestr = "BaseCreature";
-							string targetname = null;
+							string targetname = "*";
 							int range = -1;
 							bool searchcontainers = false;
 
 							if (arglist.Length > 0)
 							{
-								string[] objstr = ParseString(arglist[0], 2, ",");
+								string[] objstr = ParseString(arglist[0], 3, ",");
 								if (objstr.Length < 2)
 								{
-									status_str = "missing range or name in SETONPETS";
+									status_str = "missing range in SETONPETS";
 									return false;
 								}
 
@@ -9046,8 +9045,8 @@ namespace Server.Mobiles
 									status_str = "invalid range in SETONPETS";
 									return false;
 								}
-
-
+								if(objstr.Length > 2)
+									targetname = objstr[2];
 							}
 							else
 							{
@@ -10654,7 +10653,6 @@ namespace Server.Mobiles
 									BroadcastSound(AccessLevel.Player, soundid);
 								}
 							}
-
 							TheSpawn.SpawnedObjects.Add(new KeywordTag(substitutedtypeName, spawner));
 
 							break;
