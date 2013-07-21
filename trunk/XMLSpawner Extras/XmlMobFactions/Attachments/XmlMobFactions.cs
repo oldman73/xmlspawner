@@ -5,7 +5,6 @@ using Server.Items;
 using Server.Network;
 using Server.Mobiles;
 using Server.Spells;
-using System.Collections;
 using System.Collections.Generic;
 using Server.Commands.Generic;
 using Server.Commands;
@@ -32,10 +31,10 @@ namespace Server.Engines.XmlSpawner2
 		private bool verboseMobFactions = true;   // determines whether faction gain/lost messages are displayed on each kill. True by default
 
 		private int m_Credits = 0;
-        
+		
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int Credits { get{ return m_Credits; } set { m_Credits = value; } }
-        
+		
 		// this scaling to determines credits gained per mob kill.
 		// default is set to 0.1% of fame.  Note, regardless of the scaling at least 1 credit will be gained per kill
 		private static double m_CreditScale = 0.001;
@@ -67,7 +66,7 @@ namespace Server.Engines.XmlSpawner2
 				return "Worshipped";
 			if(level > 25000)
 				return "Untouchable";
-            
+			
 			// should never get here
 			return null;
 		}
@@ -217,75 +216,75 @@ namespace Server.Engines.XmlSpawner2
 			PlayerGroup.OpponentGain = new double [] { 2,        1,              2,          2,              1,              4 };    // scale factor for faction gained by opponent groups
 			PlayerGroup.Allies = new Group[] { PlayerGroup, FairieGroup };
 			PlayerGroup.AllyLoss = new double [] { 30.0,    10 };          // scale factor for faction lost for killing within group
-			PlayerGroup.Members = new ArrayList(PlayerMembers);
+			PlayerGroup.Members = new List<Type>(PlayerMembers);
 
 			UndeadGroup.Opponents = new Group[] {HumanoidGroup, PlayerGroup, FairieGroup};
 			UndeadGroup.OpponentGain = new double [] {  1,       0.1,        0.5 };
 			UndeadGroup.Allies = new Group[] { UndeadGroup, AbyssGroup };
 			UndeadGroup.AllyLoss = new double [] {1.2,      0.4};
-			UndeadGroup.Members = new ArrayList(UndeadMembers);
-			UndeadGroup.Members.Add(new XmlDynamicFaction("Undead"));
+			UndeadGroup.Members = new List<Type>(UndeadMembers);
+			UndeadGroup.DynamicFaction = "Undead";
 
 			HumanoidGroup.Opponents = new Group[] {UndeadGroup, PlayerGroup, PlantGroup};
 			HumanoidGroup.OpponentGain = new double [] {  1,       0.05,     0.5 };
 			HumanoidGroup.Allies = new Group[] { HumanoidGroup };
 			HumanoidGroup.AllyLoss = new double [] {1.2};
-			HumanoidGroup.Members = new ArrayList(HumanoidMembers);
-			HumanoidGroup.Members.Add(new XmlDynamicFaction("Humanoid"));
+			HumanoidGroup.Members = new List<Type>(HumanoidMembers);
+			HumanoidGroup.DynamicFaction = "Humanoid";
 
 			ArachnidGroup.Opponents = new Group[] {ReptilianGroup, PlayerGroup, FairieGroup};
 			ArachnidGroup.OpponentGain = new double [] {  1,       0.15,        0.3 };
 			ArachnidGroup.Allies = new Group[] { ArachnidGroup, PlantGroup };
 			ArachnidGroup.AllyLoss = new double [] {1.2,        0.5 };
-			ArachnidGroup.Members = new ArrayList(ArachnidMembers);
-			ArachnidGroup.Members.Add(new XmlDynamicFaction("Arachnid"));
+			ArachnidGroup.Members = new List<Type>(ArachnidMembers);
+			ArachnidGroup.DynamicFaction = "Arachnid";
 
 			ReptilianGroup.Opponents = new Group[] {ArachnidGroup, PlayerGroup};
 			ReptilianGroup.OpponentGain = new double [] {  1,       0.1 };
 			ReptilianGroup.Allies = new Group[] { ReptilianGroup };
 			ReptilianGroup.AllyLoss = new double [] {1.2};
-			ReptilianGroup.Members = new ArrayList(ReptilianMembers);
-			ReptilianGroup.Members.Add(new XmlDynamicFaction("Reptilian"));
+			ReptilianGroup.Members = new List<Type>(ReptilianMembers);
+			ReptilianGroup.DynamicFaction = "Reptilian";
 
 			ElementalGroup.Opponents = new Group[] {AbyssGroup, PlayerGroup, PlantGroup};
 			ElementalGroup.OpponentGain = new double [] {  1,       0.05,    0.5 };
 			ElementalGroup.Allies = new Group[] { ElementalGroup };
 			ElementalGroup.AllyLoss = new double [] {1.2};
-			ElementalGroup.Members = new ArrayList(ElementalMembers);
-			ElementalGroup.Members.Add(new XmlDynamicFaction("Elemental"));
+			ElementalGroup.Members = new List<Type>(ElementalMembers);
+			ElementalGroup.DynamicFaction = "Elemental";
 
 			AbyssGroup.Opponents = new Group[] {ElementalGroup, PlayerGroup, FairieGroup};
 			AbyssGroup.OpponentGain = new double [] {  1,       0.2,           1 };
 			AbyssGroup.Allies = new Group[] { AbyssGroup, UndeadGroup };
 			AbyssGroup.AllyLoss = new double [] {1.2,      0.4};
-			AbyssGroup.Members = new ArrayList(AbyssMembers);
-			AbyssGroup.Members.Add(new XmlDynamicFaction("Abyss"));
+			AbyssGroup.Members = new List<Type>(AbyssMembers);
+			AbyssGroup.DynamicFaction = "Abyss";
 
 			FairieGroup.Opponents = new Group[] {ArachnidGroup, UndeadGroup, AbyssGroup};
 			FairieGroup.OpponentGain = new double [] {  0.5,       0.7,       1 };
 			FairieGroup.Allies = new Group[] { FairieGroup, PlayerGroup };
 			FairieGroup.AllyLoss = new double [] { 1.2,     0.5};
-			FairieGroup.Members = new ArrayList(FairieMembers);
-			FairieGroup.Members.Add(new XmlDynamicFaction("Fairie"));
+			FairieGroup.Members = new List<Type>(FairieMembers);
+			FairieGroup.DynamicFaction = "Fairie";
 
 			PlantGroup.Opponents = new Group[] {ElementalGroup, HumanoidGroup};
 			PlantGroup.OpponentGain = new double [] {  0.5,       0.7 };
 			PlantGroup.Allies = new Group[] { PlantGroup };
 			PlantGroup.AllyLoss = new double [] { 1.2 };
-			PlantGroup.Members = new ArrayList(PlantMembers);
-			PlantGroup.Members.Add(new XmlDynamicFaction("Plant"));
-            
+			PlantGroup.Members = new List<Type>(PlantMembers);
+			PlantGroup.DynamicFaction = "Plant";
+			
 			UnderworldGroup.Opponents = new Group[] { AbyssGroup, HumanoidGroup};
 			UnderworldGroup.OpponentGain = new double [] {  0.5,       0.7 };
 			UnderworldGroup.Allies = new Group[] { UnderworldGroup, UndeadGroup, ElementalGroup };
 			UnderworldGroup.AllyLoss = new double [] { 1.2,          1.0,        1.0};
-			UnderworldGroup.Members = new ArrayList(UnderworldMembers);
-			UnderworldGroup.Members.Add(new XmlDynamicFaction("Underworld"));
+			UnderworldGroup.Members = new List<Type>(UnderworldMembers);
+			UnderworldGroup.DynamicFaction = "Underworld";
 
 			// this group does not have a predefined set of members but instead uses only the dynamic faction system to determine whether a mob
 			// is a member of the group
-			NecroMastersGroup.Members = new ArrayList();
-			NecroMastersGroup.Members.Add(new XmlDynamicFaction("NecroMasters"));
+			NecroMastersGroup.Members = new List<Type>();
+			NecroMastersGroup.DynamicFaction = "NecroMasters";
 			NecroMastersGroup.Allies = new Group[] { NecroMastersGroup };
 			NecroMastersGroup.AllyLoss = new double [] { 1 };
 
@@ -353,7 +352,7 @@ namespace Server.Engines.XmlSpawner2
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int Plant { get { return GetFactionLevel(GroupTypes.Plant); } set { SetFactionLevel(GroupTypes.Plant,value); } }
-        
+		
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int Underworld { get { return GetFactionLevel(GroupTypes.Underworld); } set { SetFactionLevel(GroupTypes.Underworld,value); } }
 
@@ -380,7 +379,6 @@ namespace Server.Engines.XmlSpawner2
 				return true;
 			}
 
-
 			// by default, mobs that arent in a faction group will have the target acquisition probability calculated as though
 			// they had a faction level of 0
 
@@ -389,7 +387,7 @@ namespace Server.Engines.XmlSpawner2
 			// return true if the target can be acquired by the mob.
 			// higher mob faction on the target means lower probability of acquisition
 			bool cantarget = (baseValue + facvalue) < Utility.Random(baseValue + maxFaction);
-            
+			
 			return cantarget;
 
 		}
@@ -402,20 +400,18 @@ namespace Server.Engines.XmlSpawner2
 
 			//XmlMobFactions x = (XmlMobFactions)XmlAttach.FindAttachment(XmlAttach.MobileAttachments, from, typeof(XmlMobFactions), "Standard");
 
-			ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments, from, typeof(XmlMobFactions), "Standard");
-			if(list != null && list.Count > 0)
+			XmlMobFactions x = XmlAttach.FindAttachment(from, typeof(XmlMobFactions), "Standard") as XmlMobFactions;
+			if(x != null)
 			{
-				XmlMobFactions x = list[0] as XmlMobFactions;
 				//if(x != null)
 				//{
 
 				int count = 0;
 				// find any static groups that this mob belongs to.  Note, if it belongs to more than one group, calculate the average.
-				ArrayList glist = FindGroups(mob);
+				List<GroupTypes> glist = FindGroups(mob);
 
 				if(glist != null && glist.Count > 0)
 				{
-
 					foreach( GroupTypes g in glist)
 					{
 
@@ -428,21 +424,20 @@ namespace Server.Engines.XmlSpawner2
 				}
 
 				// does this mob have dynamic faction assignments?
-				ArrayList dlist = XmlAttach.FindAttachments(XmlAttach.MobileAttachments, mob, typeof(XmlDynamicFaction));
+				List<XmlAttachment> dlist = XmlAttach.FindAttachments(mob, typeof(XmlDynamicFaction));
 				if(dlist != null && dlist.Count > 0)
 				{
 
 					//if(XmlAttach.FindAttachment(XmlAttach.MobileAttachments, mob, typeof(XmlDynamicFaction)) != null)
 					//{
 					// do this for dynamic factions as well
-					ArrayList dglist = DynamicFindGroups(mob);
+					List<GroupTypes> dglist = DynamicFindGroups(mob);
 
 					if(dglist != null && dglist.Count > 0)
 					{
-
 						foreach( GroupTypes g in dglist)
 						{
-    
+	
 							if(g != GroupTypes.End_Unused)
 							{
 								facvalue += x.GetFactionLevel(g)*scale;
@@ -451,7 +446,7 @@ namespace Server.Engines.XmlSpawner2
 						}
 					}
 				}
-                
+				
 				// compute the average faction value
 				if(count > 0)
 				{
@@ -469,10 +464,10 @@ namespace Server.Engines.XmlSpawner2
 		{
 			int val = 0;
 
-			ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlMobFactions), "Standard");
-			if(list != null && list.Count > 0)
+			XmlMobFactions x = XmlAttach.FindAttachment(m, typeof(XmlMobFactions), "Standard") as  XmlMobFactions;
+			if(x != null)
 			{
-				val = ((XmlMobFactions)list[0]).Credits;
+				val = x.Credits;
 			}
 
 			return val;
@@ -482,11 +477,9 @@ namespace Server.Engines.XmlSpawner2
 		{
 			if(m == null || m.Deleted) return false;
 
-			ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlMobFactions), "Standard");
-			if(list != null && list.Count > 0)
+			XmlMobFactions x = XmlAttach.FindAttachment(m, typeof(XmlMobFactions), "Standard") as XmlMobFactions;
+			if(x != null)
 			{
-				XmlMobFactions x = list[0] as XmlMobFactions;
-
 				if(x.Credits >= credits)
 				{
 					return true;
@@ -500,11 +493,9 @@ namespace Server.Engines.XmlSpawner2
 		{
 			if(m == null || m.Deleted) return false;
 
-			ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlMobFactions), "Standard");
-			if(list != null && list.Count > 0)
+			XmlMobFactions x = XmlAttach.FindAttachment(m, typeof(XmlMobFactions), "Standard") as XmlMobFactions;
+			if(x != null)
 			{
-				XmlMobFactions x = list[0] as XmlMobFactions;
-
 				if(x.Credits >= credits)
 				{
 					x.Credits -= credits;
@@ -515,16 +506,13 @@ namespace Server.Engines.XmlSpawner2
 			return false;
 		}
 
-        
 		public static int GetFactionLevel(Mobile m, GroupTypes grouptype)
 		{
 			if(m == null || grouptype == GroupTypes.End_Unused) return 0;
 
-			ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments, m, typeof(XmlMobFactions), "Standard");
-			if(list != null && list.Count > 0)
+			XmlMobFactions x = XmlAttach.FindAttachment(m, typeof(XmlMobFactions), "Standard") as XmlMobFactions;
+			if(x != null)
 			{
-				XmlMobFactions x = list[0] as XmlMobFactions;
-
 				if(x.FactionList == null ) return 0;
 
 				foreach(GroupStatus g in x.FactionList)
@@ -535,21 +523,22 @@ namespace Server.Engines.XmlSpawner2
 			return 0;
 		}
 
-		private static Hashtable GroupTypeHash = new Hashtable();
+		private static Dictionary<Type, List<XmlMobFactions.GroupTypes>> GroupTypeHash = new Dictionary<Type, List<XmlMobFactions.GroupTypes>>();
 
 		// this method returns a list of the group types that the mobile belongs to using the KillGroups master list
-		public static ArrayList FindGroups(Mobile m)
+		public static List<GroupTypes> FindGroups(Mobile m)
 		{
 			if(m == null) return null;
 
-			// see whether this mobile type is already in the hash table
-			if(GroupTypeHash.Contains(m.GetType()))
+			List<GroupTypes> list;
+			// see whether this mobile type is already in the dictionary
+			if(GroupTypeHash.TryGetValue(m.GetType(), out list) && list!=null)
 			{
 				// then get the list from there
-				return (ArrayList)GroupTypeHash[m.GetType()];
+				return GroupTypeHash[m.GetType()];
 			}
 
-			ArrayList list = new ArrayList();
+			list = new List<XmlMobFactions.GroupTypes>();
 
 			foreach(Group g in KillGroups)
 			{
@@ -558,21 +547,21 @@ namespace Server.Engines.XmlSpawner2
 					list.Add(g.GroupType);
 				}
 			}
-			GroupTypeHash.Add(m.GetType(),list);
+			GroupTypeHash[m.GetType()]=list;
 
 			return list;
 		}
-        
+		
 		// this method returns a list of the group types that the mobile belongs based upon dynamic factions
-		public static ArrayList DynamicFindGroups(Mobile m)
+		public static List<GroupTypes> DynamicFindGroups(Mobile m)
 		{
 			if(m == null) return null;
 
-			ArrayList list = new ArrayList();
+			List<GroupTypes> list = new List<XmlMobFactions.GroupTypes>();
 
 			foreach(Group g in KillGroups)
 			{
-				if(DynamicMatchType(g.Members, m))
+				if(XmlDynamicFaction.MatchFaction(m, g.DynamicFaction))
 				{
 					list.Add(g.GroupType);
 				}
@@ -593,38 +582,27 @@ namespace Server.Engines.XmlSpawner2
 			return null;
 		}
 
-		private static bool MatchType( ArrayList array, Mobile m)
+		private static bool MatchType(List<Type> list, Mobile m)
 		{
-			if(array == null || m == null) return false;
+			if(list == null || m == null) return false;
 
-			foreach( object o in array)
+			foreach(Type o in list)
 			{
-				if(o is Type && ((Type)o == m.GetType() || ((Type)o).IsSubclassOf(m.GetType()))) return true;
-			}
-			return false;
-		}
-		
-		private static bool DynamicMatchType( ArrayList array, Mobile m)
-		{
-			if(array == null || m == null) return false;
-
-			foreach( object o in array)
-			{
-
-				if(o is XmlDynamicFaction && XmlDynamicFaction.MatchFaction(m, ((XmlDynamicFaction)o).Name)) return true;
+				if(o == m.GetType() || o.IsSubclassOf(m.GetType())) return true;
 			}
 			return false;
 		}
 
 		public class Group
 		{
-			public GroupTypes GroupType;
-			public ArrayList Members;
+			public string DynamicFaction;
+			public GroupTypes GroupType;//an attachment added to this list? this allows what? we can't add manually attachment in this way!
+			public List<Type> Members;
 			public Group []    Opponents;
 			public Group []    Allies;
 			public double [] AllyLoss;        // scale factor for faction lost by killing this group
 			public double [] OpponentGain;        // scale factor for faction gained by opponent groups for killing this group
-            
+			
 			public Group(GroupTypes type)
 			{
 				GroupType = type;
@@ -639,7 +617,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			public GroupTypes GroupType;
 			public int     FactionLevel;
-            
+			
 			public GroupStatus(GroupTypes type)
 			{
 				GroupType = type;
@@ -688,13 +666,10 @@ namespace Server.Engines.XmlSpawner2
 		[Description( "Turns on/off display of faction gain/loss on mob kills" )]
 		public static void VerboseMobFactions_OnCommand( CommandEventArgs e )
 		{
-
 			// get the mob factions attachment
-			ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments, e.Mobile, typeof(XmlMobFactions), "Standard");
-			if(list != null && list.Count > 0)
+			XmlMobFactions x = XmlAttach.FindAttachment(e.Mobile, typeof(XmlMobFactions), "Standard") as XmlMobFactions;
+			if(x != null)
 			{
-				XmlMobFactions x = list[0] as XmlMobFactions;
-
 				if(e.Arguments.Length > 0)
 				{
 					try
@@ -719,11 +694,10 @@ namespace Server.Engines.XmlSpawner2
 		public static void CheckMobFactions_OnCommand( CommandEventArgs e )
 		{
 			// get the mob factions attachment
-			ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments, e.Mobile, typeof(XmlMobFactions), "Standard");
-			if(list != null && list.Count > 0)
+			XmlMobFactions x = XmlAttach.FindAttachment(e.Mobile, typeof(XmlMobFactions), "Standard") as XmlMobFactions;
+			if(x != null)
 			{
-				XmlMobFactions x = list[0] as XmlMobFactions;
-				e.Mobile.SendMessage("{0}",x.OnIdentify(e.Mobile));
+				e.Mobile.SendMessage("{0}", x.OnIdentify(e.Mobile));
 			}
 		}
 
@@ -737,11 +711,11 @@ namespace Server.Engines.XmlSpawner2
 				if(m.Player)
 				{
 					// does this player already have a points attachment?
-					ArrayList list = XmlAttach.FindAttachments(m, typeof(XmlMobFactions), "Standard");
-					if(list == null || list.Count == 0)
+					XmlMobFactions x = XmlAttach.FindAttachment(m, typeof(XmlMobFactions), "Standard") as XmlMobFactions;
+					if(x == null)
 					{
-						XmlAttachment x = new XmlMobFactions();
-						XmlAttach.AttachTo(e.Mobile, m,x);
+						x = new XmlMobFactions();
+						XmlAttach.AttachTo(e.Mobile, m, x);
 						count++;
 					}
 				}
@@ -754,22 +728,24 @@ namespace Server.Engines.XmlSpawner2
 		public static void RemoveAllMobFactions_OnCommand( CommandEventArgs e )
 		{
 			int count = 0;
+			int total = 0;
 			foreach(Mobile m in World.Mobiles.Values)
 			{
 				if(m.Player)
 				{
-					ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments,  m, typeof(XmlMobFactions), "Standard");
+					List<XmlAttachment> list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments,  m, typeof(XmlMobFactions), "Standard");
 					if(list != null && list.Count > 0)
 					{
 						foreach(XmlAttachment x in list)
 						{
 							x.Delete();
 						}
+						count++;
 					}
-					count++;
+					total++;
 				}
 			}
-			e.Mobile.SendMessage("Removed XmlMobFaction attachments from {0} players",count);
+			e.Mobile.SendMessage("Removed XmlMobFaction attachments from {0} players ({1} total players)", count, total);
 		}
 
 		// These are the various ways in which the message attachment can be constructed.
@@ -793,7 +769,7 @@ namespace Server.Engines.XmlSpawner2
 				FactionList[i].GroupType = (GroupTypes)i;
 			}
 		}
-        
+		
 		[Attachable]
 		public XmlMobFactions() : this("Standard", 0)
 		{
@@ -811,7 +787,7 @@ namespace Server.Engines.XmlSpawner2
 
 		public override bool HandlesOnKill { get { return true; } }
 
-		private static Hashtable GroupHash = new Hashtable();
+		private static Dictionary<Type, List<XmlMobFactions.Group>> GroupHash = new Dictionary<Type, List<XmlMobFactions.Group>>();
 
 		private bool m_ChallengeStatus = false;
 
@@ -820,7 +796,6 @@ namespace Server.Engines.XmlSpawner2
 			// if you have XmlPoints installed and wish to prevent challenge games and duels from affecting
 			// faction points then uncomment the following line
 			//m_ChallengeStatus = XmlPoints.AreChallengers(killer, killed);
-
 		}
 
 		public override void OnKill(Mobile killed, Mobile killer )
@@ -835,7 +810,7 @@ namespace Server.Engines.XmlSpawner2
 			}
 
 			if(killed == null || killer == null || killer == killed) return;
-		    
+			
 			// check for within guild kills and ignore them
 			if(SameGuild(killed,killer)) return;
 
@@ -850,19 +825,15 @@ namespace Server.Engines.XmlSpawner2
 			Credits += cval;
 
 			// prepare the group lists that will be checked for faction
-			ArrayList glist = null;
-			ArrayList dglist = null;
+			List<XmlMobFactions.Group> glist = null;
+			List<XmlMobFactions.Group> dglist = null;
 
 			// check to see whether this mob type has already been hashed into a group list
-			if(GroupHash.Contains(killed.GetType()))
-			{
-				glist = (ArrayList)GroupHash[killed.GetType()];
-			} 
-			else
+			if(!GroupHash.TryGetValue(killed.GetType(), out glist) || glist==null)
 			{
 				// otherwise look it up the slow way and prepare a hash entry for it at the same time
 				// unless it is using dynamic faction
-				glist = new ArrayList();
+				glist = new List<XmlMobFactions.Group>();
 				foreach(Group g in KillGroups)
 				{
 					if(MatchType(g.Members, killed))
@@ -870,34 +841,34 @@ namespace Server.Engines.XmlSpawner2
 						glist.Add(g);
 					}
 				}
-				GroupHash.Add(killed.GetType(),glist);
+				GroupHash[killed.GetType()]=glist;
 			}
 
 			// have to look up dynamic factions the exhaustive way
 			// does this mob have dynamic faction assignments?
-			ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments, killed, typeof(XmlDynamicFaction));
-			if(list != null && list.Count > 0)
+			XmlAttachment dynam = XmlAttach.FindAttachment(killed, typeof(XmlDynamicFaction));
+			if(dynam != null)
 			{
 				//if(XmlAttach.FindAttachment(XmlAttach.MobileAttachments, killed, typeof(XmlDynamicFaction)) != null)
 				//{
-				dglist = new ArrayList();
+				dglist = new List<XmlMobFactions.Group>();
 				foreach(Group g in KillGroups)
 				{
-					if(DynamicMatchType(g.Members, killed))
+					if(XmlDynamicFaction.MatchFaction(killed, g.DynamicFaction))
 					{
 						dglist.Add(g);
 					}
 				}
 			}
 
-			ArrayList alist = new ArrayList();
+			List<List<XmlMobFactions.Group>> alist = new List<List<XmlMobFactions.Group>>();
 			if(glist != null && glist.Count > 0)
 				alist.Add(glist);
 			if(dglist != null && dglist.Count > 0)
 				alist.Add(dglist);
 
 			//  go through this with static and dynamic factions
-			foreach(ArrayList al in alist)
+			foreach(List<XmlMobFactions.Group> al in alist)
 			{
 				foreach(Group g in al)
 				{
@@ -915,7 +886,7 @@ namespace Server.Engines.XmlSpawner2
 							} 
 							catch{}
 							if(facloss <= 0) facloss = 1;
-        
+		
 							int p = GetFactionLevel(ally.GroupType) - facloss;
 							SetFactionLevel(ally.GroupType, p);
 							if(verboseMobFactions)
@@ -956,6 +927,7 @@ namespace Server.Engines.XmlSpawner2
 
 			writer.Write( (int) 1 );
 
+			// version 2
 			// version 1
 			writer.Write( m_Credits );
 			// version 0
@@ -1013,12 +985,9 @@ namespace Server.Engines.XmlSpawner2
 
 						// look up the enum by name
 						GroupTypes gtype = GroupTypes.End_Unused;
-						try
-						{
-							gtype = (GroupTypes)Enum.Parse(typeof(GroupTypes), gname);
-						} 
-						catch{}
-                    
+						if(!Enum.TryParse(gname, out gtype))
+							gtype=GroupTypes.End_Unused;
+
 						// try to find the matching entry in the recently constructed faction status list
 						if(gtype != GroupTypes.End_Unused)
 						{
@@ -1055,7 +1024,7 @@ namespace Server.Engines.XmlSpawner2
 
 				// prepare the page
 				AddPage( 0 );
-    
+	
 				AddBackground( 0, 0, 400, 330, 5054 );
 				AddAlphaRegion( 0, 0, 400, 330 );
 				AddLabel( 20, 2, 55, "Mob Faction Standings" );
@@ -1066,22 +1035,22 @@ namespace Server.Engines.XmlSpawner2
 				}
 
 				AddHtml( 20,20, 360, 260, text, true , true );
-                
+				
 				// add the verbose factions checkbox
 				AddLabel( 50, 290, 55, "Verbose Factions" );
 				AddButton( 20, 290, (a.verboseMobFactions ? 0xD3 :0xD2), (a.verboseMobFactions ? 0xD2 :0xD3), 100, GumpButtonType.Reply, 0);
 			}
-    		
+			
 			public override void OnResponse( NetState state, RelayInfo info )
 			{
 
 				if(m_attachment == null || state == null || state.Mobile == null || info == null) return;
-                
+				
 				switch(info.ButtonID)
 				{
 					case 100:
 						m_attachment.verboseMobFactions = !m_attachment.verboseMobFactions;
-                    
+					
 						state.Mobile.SendGump( new MobFactionGump(state.Mobile, m_attachment, m_text));
 						break;
 				}

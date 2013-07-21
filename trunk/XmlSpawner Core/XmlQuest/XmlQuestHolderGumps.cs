@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Network;
@@ -451,10 +451,10 @@ namespace Server.Gumps
                             }
                             else
                             {
-                                ArrayList a = XmlAttach.FindAttachments(questitem.Owner, typeof(XmlQuestAttachment), questitem.Name);
+                                List<XmlAttachment> a = XmlAttach.FindAttachments(questitem.Owner, typeof(XmlQuestAttachment), questitem.Name);
                                 if (a != null && a.Count > 0)
                                 {
-                                    AddLabel(100, 392, 33, String.Format("Repeatable in {0}", ((XmlQuestAttachment)a[0]).Expiration));
+                                    AddLabel(100, 392, 33, String.Format("Repeatable in {0}", a[0].Expiration));
                                 }
                                 else
                                 {

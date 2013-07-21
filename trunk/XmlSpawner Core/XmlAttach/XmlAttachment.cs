@@ -3,7 +3,7 @@ using System.Text;
 using Server;
 using Server.Commands;
 using Server.Network;
-using System.Collections;
+using System.Collections.Generic;
 using Server.Mobiles;
 using Server.Targeting;
 using Server.Items;
@@ -78,13 +78,13 @@ namespace Server.Engines.XmlSpawner2
 
 		bool BlockDefaultOnUse(Mobile from, object target);
 
-        bool OnDragLift(Mobile from, Item item);
+		bool OnDragLift(Mobile from, Item item);
 
 		string OnIdentify(Mobile from);
 
 		string DisplayedProperties(Mobile from);
 
-        void AddProperties(ObjectPropertyList list);
+		void AddProperties(ObjectPropertyList list);
 
 		string AttachedBy { get; }
 
@@ -105,7 +105,6 @@ namespace Server.Engines.XmlSpawner2
 		void Serialize(GenericWriter writer);
 
 		void Deserialize(GenericReader reader);
-
 	}
 
 	public abstract class XmlAttachment : IXmlAttachment
@@ -262,7 +261,7 @@ namespace Server.Engines.XmlSpawner2
 			// get the next unique serial id
 			m_Serial = ASerial.NewSerial();
 
-			// register the attachment in the serial keyed hashtable
+			// register the attachment in the serial keyed dictionary
 			XmlAttach.HashSerial(m_Serial, this);
 		}
 
@@ -289,8 +288,6 @@ namespace Server.Engines.XmlSpawner2
 		public virtual void OnEquip(Mobile from)
 		{
 		}
-
-
 
 		public virtual void OnRemoved(object parent)
 		{
@@ -320,10 +317,10 @@ namespace Server.Engines.XmlSpawner2
 			return false;
 		}
 
-        public virtual bool OnDragLift(Mobile from, Item item)
-        {
-            return true;
-        }
+		public virtual bool OnDragLift(Mobile from, Item item)
+		{
+			return true;
+		}
 
 		public void SetAttachedBy(string name)
 		{
@@ -368,7 +365,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			return 0;
 		}
-
+		
 		public virtual string OnIdentify(Mobile from)
 		{
 			return null;
@@ -380,9 +377,9 @@ namespace Server.Engines.XmlSpawner2
 		}
 
 
-        public virtual void AddProperties(ObjectPropertyList list)
-        {
-        }
+		public virtual void AddProperties(ObjectPropertyList list)
+		{
+		}
 
 		public void InvalidateParentProperties()
 		{
@@ -392,43 +389,43 @@ namespace Server.Engines.XmlSpawner2
 			}
 		}
 
-        public void SafeItemDelete(Item item)
-        {
-            Timer.DelayCall(TimeSpan.Zero, new TimerStateCallback(DeleteItemCallback), new object[] { item });
+		public void SafeItemDelete(Item item)
+		{
+			Timer.DelayCall(TimeSpan.Zero, new TimerStateCallback(DeleteItemCallback), new object[] { item });
 
-        }
+		}
 
-        public void DeleteItemCallback(object state)
-        {
-            object[] args = (object[])state;
+		public void DeleteItemCallback(object state)
+		{
+			object[] args = (object[])state;
 
-            Item item = args[0] as Item;
+			Item item = args[0] as Item;
 
-            if (item != null)
-            {
-                // delete the item
-                item.Delete();
-            }
-        }
+			if (item != null)
+			{
+				// delete the item
+				item.Delete();
+			}
+		}
 
-        public void SafeMobileDelete(Mobile mob)
-        {
-            Timer.DelayCall(TimeSpan.Zero, new TimerStateCallback(DeleteMobileCallback), new object[] { mob });
+		public void SafeMobileDelete(Mobile mob)
+		{
+			Timer.DelayCall(TimeSpan.Zero, new TimerStateCallback(DeleteMobileCallback), new object[] { mob });
 
-        }
+		}
 
-        public void DeleteMobileCallback(object state)
-        {
-            object[] args = (object[])state;
+		public void DeleteMobileCallback(object state)
+		{
+			object[] args = (object[])state;
 
-            Mobile mob = args[0] as Mobile;
+			Mobile mob = args[0] as Mobile;
 
-            if (mob != null)
-            {
-                // delete the mobile
-                mob.Delete();
-            }
-        }
+			if (mob != null)
+			{
+				// delete the mobile
+				mob.Delete();
+			}
+		}
 
 		public void Delete()
 		{

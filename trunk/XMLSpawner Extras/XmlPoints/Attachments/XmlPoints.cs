@@ -22,7 +22,7 @@ namespace Server.Engines.XmlSpawner2
 	public class XmlPoints : XmlAttachment
 	{
 		private const int DefaultStartingPoints = 100;  // 100 default starting points
-        
+		
 		private int m_Points = DefaultStartingPoints;
 		private bool m_Broadcast = true;       // flag that determines whether pvp results will be broadcast.  Broadcast is determined by the killer's flag.
 		private int m_Kills;    // cumulative kill count
@@ -39,7 +39,7 @@ namespace Server.Engines.XmlSpawner2
 		private int m_DeltaRank;
 		private DateTime m_LastDecay;
 		private bool m_ReceiveBroadcasts = true;
-        
+		
 		public DateTime m_CancelEnd;
 		public CancelTimer m_CancelTimer;
 
@@ -54,13 +54,13 @@ namespace Server.Engines.XmlSpawner2
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int DeltaRank { get{ return m_DeltaRank; } set { m_DeltaRank = value; } }
-        
+		
 		[CommandProperty( AccessLevel.GameMaster )]
 		public DateTime WhenRanked { get{ return m_WhenRanked; } set { m_WhenRanked = value; } }
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int Credits { get{ return m_Credits; } set { m_Credits = value; } }
-        
+		
 		[CommandProperty( AccessLevel.GameMaster )]
 		public bool Broadcast { get{ return m_Broadcast; } set { m_Broadcast = value; } }
 
@@ -75,15 +75,15 @@ namespace Server.Engines.XmlSpawner2
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public DateTime LastKill { get{ return m_LastKill; } }
-        
+		
 		[CommandProperty( AccessLevel.GameMaster )]
 		public DateTime LastDeath { get{ return m_LastDeath; } }
-        
+		
 		public bool HasChallenge { get{ return ((m_Challenger != null && !m_Challenger.Deleted)|| (m_ChallengeGame != null && !m_ChallengeGame.Deleted)); } }
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public Mobile Challenger { get{ return m_Challenger; } set { m_Challenger = value; } }
-        
+		
 		public BaseChallengeGame ChallengeGame { get{ return m_ChallengeGame; } set { m_ChallengeGame = value; } }
 
 		public BaseChallengeGame ChallengeSetup { get{ return m_ChallengeSetup; } set { m_ChallengeSetup = value; } }
@@ -109,18 +109,18 @@ namespace Server.Engines.XmlSpawner2
 		private static TimeSpan m_PointsDecayTime = TimeSpan.FromDays(15);      // default time interval for automatic point loss for no pvp activity
 		// set m_PointsDecay to zero to disable the automatic points decay feature
 		private static int m_PointsDecay = 10;                                  // default point loss if no kills are made within the PointsDecayTime
-        
+		
 		// set m_CancelTimeout to determine how long it takes to cancel a challenge after it is requested
 		public static TimeSpan CancelTimeout = TimeSpan.FromMinutes(15);
-        
+		
 		public static bool AllowWithinGuildPoints = true;              // allow within-guild challenge duels for points.
 
 		public static bool UnrestrictedChallenges = false;              // allow the normal waiting time between kills for points to be overridden for challenges
-        
+		
 		// allows players to be autores'd following 1-on-1 duels
 		// Team Challenge type matches handle their own autores behavior
 		public static bool AutoResAfterDuel = true;
-        
+		
 		public static bool GainHonorFromDuel = false;
 		public static bool LogKills = true;			// log all kills that award points to the kills.log file
 
@@ -141,7 +141,7 @@ namespace Server.Engines.XmlSpawner2
 		private static Hashtable [] TextHash = new Hashtable[3];
 
 		private LanguageType m_CurrentLanguage = LanguageType.ENGLISH; // player selected language setting
-        
+		
 		private static LanguageType m_SystemLanguage = LanguageType.ENGLISH; // system default language setting
 
 		public static DuelLocationEntry[] DuelLocations = new DuelLocationEntry[]
@@ -212,12 +212,12 @@ namespace Server.Engines.XmlSpawner2
 			{
 				TextHash[tindex] = new Hashtable();
 			}
-    	   
+		   
 			Hashtable h = TextHash[tindex];
 
 			h.Add(index,text);
 		}
-    	
+		
 		public static string SystemText(int index)
 		{
 			if((int)m_SystemLanguage >= TextHash.Length)
@@ -262,7 +262,7 @@ namespace Server.Engines.XmlSpawner2
 
 					// missing entry in the system language.  Try the default english
 					h = TextHash[(int)LanguageType.ENGLISH];
-    
+	
 					// still no entry, so return null
 					if(h == null || !h.Contains(index))
 					{
@@ -274,7 +274,7 @@ namespace Server.Engines.XmlSpawner2
 
 			return (string)h[index];
 		}
-    	
+		
 		public static string GetText(Mobile from, int msgindex)
 		{
 			// go through the participant list and send all participants the message
@@ -351,7 +351,7 @@ namespace Server.Engines.XmlSpawner2
 			from.SendMessage(color,String.Format(Text(msgindex), arg));
 
 		}
-    	
+		
 		public static void SendText(Mobile from, int msgindex)
 		{
 			SendColorText(from, 0, msgindex);
@@ -366,7 +366,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			SendColorText(from, 0, msgindex, arg, arg2);
 		}
-    	
+		
 		public static void SendColorText(Mobile from, int color, int msgindex)
 		{
 			// go through the participant list and send all participants the message
@@ -468,13 +468,13 @@ namespace Server.Engines.XmlSpawner2
 			if(needsupdate && RankList != null)
 			{
 				RankList.Sort();
-                
+				
 				int rank = 0;
 				//int prevpoints = 0;
 				for(int i= 0; i<RankList.Count;i++)
 				{
 					RankEntry p = RankList[i] as RankEntry;
-    
+	
 					// bump the rank for every change in point level
 					// this means that people with the same points score will have the same rank
 					/*
@@ -485,13 +485,13 @@ namespace Server.Engines.XmlSpawner2
 
 					prevpoints = p.PointsAttachment.Points;
 					*/
-    
+	
 					// bump the rank for every successive player in the list.  Players with the same points total will be
 					// ordered by kills
 					rank++;
 
 					p.Rank = rank;
-    
+	
 				}
 				needsupdate = false;
 			}
@@ -532,7 +532,7 @@ namespace Server.Engines.XmlSpawner2
 			for(int i= 0; i<RankList.Count;i++)
 			{
 				RankEntry p = RankList[i] as RankEntry;
-                
+				
 				// found a match
 				if(p != null && p.Killer == m)
 				{
@@ -558,12 +558,12 @@ namespace Server.Engines.XmlSpawner2
 		{
 			int val = 0;
 
-			ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
+			XmlPoints x = XmlAttach.FindAttachment(m, typeof(XmlPoints)) as XmlPoints;
+			if(x != null)
 			{
-				val = ((XmlPoints)list[0]).Credits;
+				val = x.Credits;
 			}
-            
+			
 			return val;
 		}
 		
@@ -571,12 +571,12 @@ namespace Server.Engines.XmlSpawner2
 		{
 			int val = 0;
 
-			ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
+			XmlPoints x = XmlAttach.FindAttachment(m, typeof(XmlPoints)) as XmlPoints;
+			if(x != null)
 			{
-				val = ((XmlPoints)list[0]).Points;
+				val = x.Points;
 			}
-            
+
 			return val;
 		}
 
@@ -584,11 +584,9 @@ namespace Server.Engines.XmlSpawner2
 		{
 			if(m == null || m.Deleted) return false;
 
-			ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
+			XmlPoints x = XmlAttach.FindAttachment(m,typeof(XmlPoints)) as XmlPoints;
+			if(x != null)
 			{
-				XmlPoints x = list[0] as XmlPoints;
-
 				if(x.Credits >= credits)
 				{
 					return true;
@@ -602,11 +600,9 @@ namespace Server.Engines.XmlSpawner2
 		{
 			if(m == null || m.Deleted) return false;
 
-			ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
+			XmlPoints x = XmlAttach.FindAttachment(m, typeof(XmlPoints)) as XmlPoints;
+			if(x != null)
 			{
-				XmlPoints x = list[0] as XmlPoints;
-
 				if(x.Credits >= credits)
 				{
 					x.Credits -= credits;
@@ -626,11 +622,9 @@ namespace Server.Engines.XmlSpawner2
 				if ( m != null && m.AccessLevel >= ac )
 				{
 					// check to see if they have a points attachment with ReceiveBroadcasts enabled
-					ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments, m, typeof(XmlPoints));
-					if(list != null && list.Count > 0)
+					XmlPoints x = XmlAttach.FindAttachment(m, typeof(XmlPoints)) as XmlPoints;
+					if(x != null)
 					{
-						XmlPoints x = list[0] as XmlPoints;
-
 						if(!x.ReceiveBroadcasts)
 							return;
 					}
@@ -639,7 +633,6 @@ namespace Server.Engines.XmlSpawner2
 				}
 			}
 		}
-
 
 		public static void EventSink_Speech( SpeechEventArgs args )
 		{
@@ -653,7 +646,7 @@ namespace Server.Engines.XmlSpawner2
 			if(args.Speech != null && args.Speech.ToLower() == "i wish to duel")
 				from.Target = new ChallengeTarget(from);
 		}
-        
+		
 		public static void ShowPointsOverhead( Mobile from )
 		{
 			if(from == null) return;
@@ -686,7 +679,6 @@ namespace Server.Engines.XmlSpawner2
 			CommandSystem.Register( "RemoveAllPoints", AccessLevel.Administrator, new CommandEventHandler( RemoveAllPoints_OnCommand ) );
 			CommandSystem.Register( "LeaderboardSave", AccessLevel.Administrator, new CommandEventHandler( LeaderboardSave_OnCommand ) );
 
-
 			foreach(Item i in World.Items.Values)
 			{
 				if(i is BaseChallengeGame && !((BaseChallengeGame)i).GameCompleted)
@@ -697,13 +689,13 @@ namespace Server.Engines.XmlSpawner2
 					if(r is ChallengeGameRegion)
 					{
 						ChallengeGameRegion cgr = r as ChallengeGameRegion;
-                        
+						
 						cgr.ChallengeGame = i as BaseChallengeGame;
 					}
 				}
 			}
 		}
-        
+		
 		public static void WriteLeaderboardXml(string filename, int nranks)
 		{
 			string dirname = Path.Combine( m_LeaderboardSaveDirectory, filename );
@@ -764,7 +756,7 @@ namespace Server.Engines.XmlSpawner2
 					TimeSpan timeranked = DateTime.Now - a.WhenRanked;
 
 					// write out the entry information
-                    
+					
 					xf.WriteStartElement( "Entry" );
 					xf.WriteAttributeString( "number", i.ToString() );
 
@@ -858,7 +850,7 @@ namespace Server.Engines.XmlSpawner2
 #if(FACTIONS)
 			sw.WriteLine( "<TR><TH><TH>Player Name<TH>Guild<TH>Faction<TH>Points<TH>Kills<TH>Deaths<TH>Rank<TH>Change<TH>Time at current rank");
 #else
-            sw.WriteLine( "<TR><TH><TH>Player Name<TH>Guild<TH>Points<TH>Kills<TH>Deaths<TH>Rank<TH>Change<TH>Time at current rank");
+			sw.WriteLine( "<TR><TH><TH>Player Name<TH>Guild<TH>Points<TH>Kills<TH>Deaths<TH>Rank<TH>Change<TH>Time at current rank");
 #endif
 			// go through the sorted list and display the top ranked players
 
@@ -911,7 +903,7 @@ namespace Server.Engines.XmlSpawner2
 						{
 							timeranked = String.Format("{0} mins {1} secs", minutes, seconds);
 						}
-                    
+					
 					string kills = "???";
 					try
 					{
@@ -940,17 +932,17 @@ namespace Server.Engines.XmlSpawner2
 						timeranked
 						);
 #else
-                    // write out the entry information
-                    sw.WriteLine( "<TR><TH><TD>{0}<TD>{1}<TD>{2}<TD>{3}<TD>{4}<TD>{5}<TD>{6}<TD>{7}",
-                    r.Killer.Name,
-                    guildname,
-                    a.Points,
-                    kills,
-                    deaths,
-                    a.Rank,
-                    a.DeltaRank,
-                    timeranked
-                    );
+					// write out the entry information
+					sw.WriteLine( "<TR><TH><TD>{0}<TD>{1}<TD>{2}<TD>{3}<TD>{4}<TD>{5}<TD>{6}<TD>{7}",
+					r.Killer.Name,
+					guildname,
+					a.Points,
+					kills,
+					deaths,
+					a.Rank,
+					a.DeltaRank,
+					timeranked
+					);
 
 #endif
 
@@ -999,7 +991,7 @@ namespace Server.Engines.XmlSpawner2
 						} 
 						catch{}
 					}
-                    
+					
 					if(e.Arguments.Length > 2)
 					{
 						try
@@ -1090,7 +1082,7 @@ namespace Server.Engines.XmlSpawner2
 				WriteLeaderboard(m_filename, m_nranks);
 			}
 		}
-        
+		
 		[Usage( "PointsLanguage" )]
 		[Description( "Displays or sets the language used by the points system" )]
 		public static void Language_OnCommand( CommandEventArgs e )
@@ -1107,7 +1099,7 @@ namespace Server.Engines.XmlSpawner2
 				} 
 				catch {}
 			}
-            
+			
 			e.Mobile.SendMessage("Current language is {0}", a.CurrentLanguage);
 		}
 
@@ -1117,10 +1109,10 @@ namespace Server.Engines.XmlSpawner2
 		{
 			string msg = null;
 
-			ArrayList list = XmlAttach.FindAttachments(e.Mobile,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
+			XmlPoints x = XmlAttach.FindAttachment(e.Mobile,typeof(XmlPoints)) as XmlPoints;
+			if(x != null)
 			{
-				msg = ((XmlPoints)list[0]).OnIdentify(e.Mobile);
+				msg = x.OnIdentify(e.Mobile);
 			}
 			if(msg != null)
 				e.Mobile.SendMessage(msg);
@@ -1132,19 +1124,20 @@ namespace Server.Engines.XmlSpawner2
 		public static void SeeKills_OnCommand( CommandEventArgs e )
 		{
 
-			ArrayList list = XmlAttach.FindAttachments(e.Mobile,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
+			XmlPoints x = XmlAttach.FindAttachment(e.Mobile,typeof(XmlPoints)) as XmlPoints;
+			if(x != null)
 			{
 				if(e.Arguments.Length > 0)
 				{
-					try
-					{
-						((XmlPoints)list[0]).ReceiveBroadcasts = bool.Parse(e.Arguments[0]);
-					} 
-					catch {}
+					bool result;
+					if(e.Arguments[0]=="si" || e.Arguments[0]=="ok" || e.Arguments[0]=="vero")
+						result=true;
+					else
+						bool.TryParse(e.Arguments[0], out result);
+					x.ReceiveBroadcasts=result;
 				}
 
-				e.Mobile.SendMessage("SeeKills is {0}",((XmlPoints)list[0]).ReceiveBroadcasts);
+				e.Mobile.SendMessage("SeeKills is {0}", x.ReceiveBroadcasts);
 			}
 		}
 
@@ -1152,20 +1145,20 @@ namespace Server.Engines.XmlSpawner2
 		[Description( "Determines whether pvp results will be broadcast.  The killers (winner) flag setting is used. " )]
 		public static void BroadcastKills_OnCommand( CommandEventArgs e )
 		{
-
-			ArrayList list = XmlAttach.FindAttachments(e.Mobile,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
+			XmlPoints x = XmlAttach.FindAttachment(e.Mobile,typeof(XmlPoints)) as XmlPoints;
+			if(x != null)
 			{
 				if(e.Arguments.Length > 0)
 				{
-					try
-					{
-						((XmlPoints)list[0]).Broadcast = bool.Parse(e.Arguments[0]);
-					} 
-					catch {}
+					bool result;
+					if(e.Arguments[0]=="si" || e.Arguments[0]=="ok" || e.Arguments[0]=="vero")
+						result=true;
+					else
+						bool.TryParse(e.Arguments[0], out result);
+					x.Broadcast=result;
 				}
 
-				e.Mobile.SendMessage("BroadcastKills is {0}",((XmlPoints)list[0]).Broadcast);
+				e.Mobile.SendMessage("BroadcastKills is {0}", x.Broadcast);
 			}
 		}
 
@@ -1175,11 +1168,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			if(e.Arguments.Length > 0)
 			{
-				try
-				{
-					m_SystemBroadcast = bool.Parse(e.Arguments[0]);
-				} 
-				catch{}
+				bool.TryParse(e.Arguments[0], out m_SystemBroadcast);
 			} 
 
 			e.Mobile.SendMessage("SystemBroadcastKills is {0}.",m_SystemBroadcast);
@@ -1189,16 +1178,10 @@ namespace Server.Engines.XmlSpawner2
 		[Description( "Displays the top players in points" )]
 		public static void TopPlayers_OnCommand( CommandEventArgs e )
 		{
-			XmlPoints attachment = null;
-			// if this player has an XmlPoints attachment, find it
-			ArrayList list = XmlAttach.FindAttachments(e.Mobile,typeof(XmlPoints));
-			if(list != null && list.Count > 0)
-			{
-				attachment = (XmlPoints)list[0];
-			}
-
+			XmlPoints attachment = XmlAttach.FindAttachment(e.Mobile, typeof(XmlPoints)) as XmlPoints;
 			e.Mobile.CloseGump(typeof(TopPlayersGump));
-			e.Mobile.SendGump(new TopPlayersGump(attachment));
+			if(attachment!=null)
+				e.Mobile.SendGump(new TopPlayersGump(attachment));
 		}
 
 		public static bool AreChallengers(Mobile from, Mobile target)
@@ -1331,13 +1314,13 @@ namespace Server.Engines.XmlSpawner2
 			{
 				return afrom.m_ChallengeGame.InsuranceIsFree(from, awardto);
 			}
-            
+			
 			// uncomment the line below if you want to prevent insurance awards for normal 1on1 duels
 			//if(atarget.Challenger == from) return true;
-            
+			
 			return false;
 		}
-        
+		
 		public static bool YoungProtection(Mobile from, Mobile target)
 		{
 			// newbie protection
@@ -1395,7 +1378,7 @@ namespace Server.Engines.XmlSpawner2
 				if(targeted is Mobile && ((Mobile)targeted).Player)
 				{
 					Mobile pm = targeted as Mobile;
-                    
+					
 					// test them for young status
 					if(YoungProtection(from, pm))
 					{
@@ -1474,7 +1457,7 @@ namespace Server.Engines.XmlSpawner2
 				}
 			}
 		}
-        
+		
 		public void DoTimer( TimeSpan delay )
 		{
 			if ( m_CancelTimer != null )
@@ -1501,11 +1484,11 @@ namespace Server.Engines.XmlSpawner2
 				if(m_attachment == null || m_attachment.Deleted) return;
 
 				Mobile from = m_attachment.AttachedTo as Mobile;
-			     
+				 
 				if(from != null && m_attachment.Challenger != null)
 				{
 					SendText(from, 100214, m_attachment.Challenger.Name); // "Challenge with {0} has been cancelled"
-			         
+					 
 					if(from.HasGump(typeof(PointsGump)))
 					{
 						m_attachment.OnIdentify(from);
@@ -1531,7 +1514,7 @@ namespace Server.Engines.XmlSpawner2
 				}
 				// clear challenger on this attachment
 				m_attachment.Challenger = null;
-                
+				
 				// refresh any open gumps
 				if(from != null && xa != null && xa.AttachedTo is Mobile)
 				{
@@ -1557,7 +1540,7 @@ namespace Server.Engines.XmlSpawner2
 			// target the player you wish to challenge
 			e.Mobile.Target = new ChallengeTarget(e.Mobile);
 		}
-        
+		
 		[Usage( "LMSChallenge" )]
 		[Description( "Creates a Last Man Standing challenge game" )]
 		public static void LMSChallenge_OnCommand( CommandEventArgs e )
@@ -1578,7 +1561,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			BaseChallengeGame.DoSetupChallenge(e.Mobile, 100400, typeof(DeathmatchGauntlet));
 		}
-        
+		
 		[Usage( "TeamDeathmatch" )]
 		[Description( "Creates a Team Deathmatch challenge game" )]
 		public static void TeamDeathmatch_OnCommand( CommandEventArgs e )
@@ -1592,7 +1575,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			BaseChallengeGame.DoSetupChallenge(e.Mobile, 100411, typeof(DeathBallGauntlet));
 		}
-        
+		
 		[Usage( "TeamDeathball" )]
 		[Description( "Creates a Team Deathball challenge game" )]
 		public static void TeamDeathBall_OnCommand( CommandEventArgs e )
@@ -1613,7 +1596,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			BaseChallengeGame.DoSetupChallenge(e.Mobile, 100417, typeof(TeamKotHGauntlet));
 		}
-        
+		
 		[Usage( "CTFChallenge" )]
 		[Description( "Creates a CTF challenge game" )]
 		public static void CTFChallenge_OnCommand( CommandEventArgs e )
@@ -1631,16 +1614,16 @@ namespace Server.Engines.XmlSpawner2
 				if(m.Player)
 				{
 					// does this player already have a points attachment?
-					ArrayList list = XmlAttach.FindAttachments(m,typeof(XmlPoints));
-					if(list == null || list.Count == 0)
+					XmlAttachment x = XmlAttach.FindAttachment(m, typeof(XmlPoints));
+					if(x == null)
 					{
-						XmlAttachment x = new XmlPoints();
-						XmlAttach.AttachTo(e.Mobile, m,x);
+						x = new XmlPoints();
+						XmlAttach.AttachTo(e.Mobile, m, x);
 						count++;
 					}
 				}
 			}
-			e.Mobile.SendMessage("Added XmlPoints attachments to {0} players",count);
+			e.Mobile.SendMessage("Added XmlPoints attachments to {0} players", count);
 		}
 
 		[Usage( "RemoveAllPoints" )]
@@ -1652,7 +1635,7 @@ namespace Server.Engines.XmlSpawner2
 			{
 				if(m.Player)
 				{
-					ArrayList list = XmlAttach.FindAttachments(XmlAttach.MobileAttachments,  m, typeof(XmlPoints));
+					List<XmlAttachment> list = XmlAttach.FindAttachments(m, typeof(XmlPoints));
 					if(list != null && list.Count > 0)
 					{
 						foreach(XmlAttachment x in list)
@@ -1683,7 +1666,7 @@ namespace Server.Engines.XmlSpawner2
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize(writer);
-            
+			
 			// check for points decay
 			if(m_Kills > 0 && m_PointsDecay > 0 && m_Points > DefaultStartingPoints && (DateTime.Now - m_LastDecay) > m_PointsDecayTime &&
 				(DateTime.Now - m_LastKill) >  m_PointsDecayTime && (DateTime.Now - m_LastDeath) >  m_PointsDecayTime)
@@ -1744,7 +1727,7 @@ namespace Server.Engines.XmlSpawner2
 			{
 				writer.Write((int)0);
 			}
-            
+			
 			// need this in order to rebuild the rankings on deser
 			if(AttachedTo is Mobile)
 				writer.Write(AttachedTo as Mobile);
@@ -1915,7 +1898,7 @@ namespace Server.Engines.XmlSpawner2
 			{
 				m_Challenger = null;
 			}
-            
+			
 			// begin the section to award points
 
 			if(!awardpoints) return;
@@ -1935,18 +1918,18 @@ namespace Server.Engines.XmlSpawner2
 			int killedpoints = 0;
 			// give the killer his points, either a fixed amount or scaled by the difference with the points of the killed
 			// if the killed has more points than the killed then gain more
-			ArrayList list = XmlAttach.FindAttachments(killed, typeof(XmlPoints));
+			XmlPoints x = XmlAttach.FindAttachment(killed, typeof(XmlPoints)) as XmlPoints;
 
-			if(list != null && list.Count > 0)
+			if(x != null)
 			{
-				killedpoints = ((XmlPoints)list[0]).Points;
+				killedpoints = x.Points;
 			}
 
 			int val = (int)((killedpoints - Points)* m_WinScale);
 			if(val <= 0) val = 1;
 
 			Points += val;
-            
+			
 			int cval = (int)((killedpoints - Points)* m_CreditScale);
 			if(cval <= 0) cval = 1;
 
@@ -1955,7 +1938,7 @@ namespace Server.Engines.XmlSpawner2
 			m_LastKill = DateTime.Now;
 
 			killer.SendMessage(String.Format(Text(100215), val, killed.Name));  // "You receive {0} points for killing {1}"
-            
+			
 			if(GainHonorFromDuel)
 			{
 				bool gainedPath = false;
@@ -2090,7 +2073,7 @@ namespace Server.Engines.XmlSpawner2
 				{
 					killer.Corpse.MoveToWorld(loc, map);
 				}
-                
+				
 				// port the killed and corpse
 				killed.PlaySound( 0x214 );
 				killed.FixedEffect( 0x376A, 10, 16 );
@@ -2099,7 +2082,7 @@ namespace Server.Engines.XmlSpawner2
 				{
 					killed.Corpse.MoveToWorld(loc, map);
 				}
-                
+				
 
 
 
@@ -2126,9 +2109,9 @@ namespace Server.Engines.XmlSpawner2
 			{
 				inchallenge = true;
 			}
-            
+			
 			bool norestriction = UnrestrictedChallenges;
-            
+			
 			// check for team challenges
 			if(ChallengeGame != null && !ChallengeGame.Deleted)
 			{
@@ -2136,7 +2119,7 @@ namespace Server.Engines.XmlSpawner2
 				if(!ChallengeGame.AllowPoints) return false;
 
 				inchallenge = true;
-                
+				
 				// check for kill delay limitations on points awards
 				norestriction = !ChallengeGame.UseKillDelay;
 			}
@@ -2283,7 +2266,7 @@ namespace Server.Engines.XmlSpawner2
 					Timer.DelayCall( TimeSpan.FromSeconds(6), new TimerStateCallback( AutoRes_Callback ),
 						new object[]{ killed, false } );
 				}
-                
+				
 				if(TeleportOnDuel)
 				{
 					// teleport back to original location
@@ -2308,8 +2291,8 @@ namespace Server.Engines.XmlSpawner2
 				killerpoints = xp.Points;
 
 
-                // add to the recently killed list
-                xp.KillList.Add(new KillEntry(killed, DateTime.Now));
+				// add to the recently killed list
+				xp.KillList.Add(new KillEntry(killed, DateTime.Now));
 			}
 
 			int val = (int)((Points - killerpoints)* m_LoseScale);
@@ -2345,7 +2328,7 @@ namespace Server.Engines.XmlSpawner2
 		public override void OnAttach()
 		{
 			base.OnAttach();
-            
+			
 			// only allow attachment to players
 			if(!(AttachedTo is Mobile && ((Mobile)AttachedTo).Player))
 				Delete();
@@ -2427,14 +2410,14 @@ namespace Server.Engines.XmlSpawner2
 			public PointsGump( XmlPoints a, Mobile from, Mobile target, string text) : base( 0,0)
 			{
 				if(target == null || a == null) return;
-                
+				
 				m_attachment = a;
 				m_target = target;
 				m_text = text;
 
 				// prepare the page
 				AddPage( 0 );
-    
+	
 				if(from == target)
 				{
 					AddBackground( 0, 0, 440, 295, 5054 );
@@ -2530,7 +2513,7 @@ namespace Server.Engines.XmlSpawner2
 					// add the team KotH challenge button
 					AddLabel( x3 + 30, 240, 55, a.Text(200237) );  // "Team KotH"
 					AddButton( x3, 240, 0xFAB, 0xFAD, 409, GumpButtonType.Reply, 0);
-                    
+					
 					// add the CTF challenge button
 					AddLabel( x1 + 30, 265, 55, a.Text(200238) );  // "CTF"
 					AddButton( x1, 265, 0xFAB, 0xFAD, 410, GumpButtonType.Reply, 0);
@@ -2644,7 +2627,6 @@ namespace Server.Engines.XmlSpawner2
 
 			public TopPlayersGump(XmlPoints attachment) : base( 0,0)
 			{
-
 				if(RankList == null || attachment == null) return;
 
 				m_attachment = attachment;
@@ -2735,7 +2717,7 @@ namespace Server.Engines.XmlSpawner2
 
 #if(FACTIONS)
 						string factionname = null;
-    
+	
 						if(r.Killer is PlayerMobile && ((PlayerMobile)r.Killer).FactionPlayerState != null) 
 							factionname = ((PlayerMobile)r.Killer).FactionPlayerState.Faction.ToString();
 #endif
@@ -2875,12 +2857,12 @@ namespace Server.Engines.XmlSpawner2
 					TextRelay entry = info.GetTextEntry( 200 );
 					if(entry != null)
 						m_attachment.guildFilter = entry.Text;
-                        
+						
 					entry = info.GetTextEntry( 100 );
 					if(entry != null)
 						m_attachment.nameFilter = entry.Text;
 				}
-                
+				
 				switch(info.ButtonID)
 				{
 					case 100:
@@ -2916,18 +2898,18 @@ namespace Server.Engines.XmlSpawner2
 				XmlPoints a = (XmlPoints)XmlAttach.FindAttachment(from, typeof(XmlPoints));
 
 				XmlPoints atarg = (XmlPoints)XmlAttach.FindAttachment(target, typeof(XmlPoints));
-                
+				
 				from.CloseGump(typeof( IssueChallengeGump ));
-                
+				
 				if(a == null || a.Deleted || atarg == null || atarg.Deleted)
 				{
 					from.SendMessage(SystemText(100213)); // "No XmlPoints support."
 					return;
 				}
-                
+				
 				// figure out how many duel locations
 				int locsize = XmlPoints.DuelLocations.Length;
-                
+				
 				if(!TeleportOnDuel) locsize = 0;
 
 				int height = 170 + locsize*30;
@@ -3071,7 +3053,7 @@ namespace Server.Engines.XmlSpawner2
 
 				AddLabel( 20, 205, 68, String.Format(GetText(target, 200259)) );  // "You have been challenged by"
 				AddLabel( 20, 225, 68, String.Format(GetText(target, 200260),from.Name) );      // "{0}. Accept?"
-                
+				
 				int y = 250;
 				if(m_DuelLocation != null)
 				{
@@ -3122,7 +3104,7 @@ namespace Server.Engines.XmlSpawner2
 								SendText(m_Target, 200650, m_DuelLocation.Name); // "{0} is occupied."
 								return;
 							}
-                            
+							
 							// make sure neither participant is in combat
 							if(CheckCombat(m_From))
 							{
@@ -3132,7 +3114,7 @@ namespace Server.Engines.XmlSpawner2
 								SendText(m_Target, 100670, m_From.Name);  // "{0} is in combat."
 								return;
 							}
-                            
+							
 							// make sure neither participant is in combat
 							if(CheckCombat(m_Target))
 							{
@@ -3149,7 +3131,7 @@ namespace Server.Engines.XmlSpawner2
 							if(a != null && !a.Deleted && (a.Challenger != null || a.ChallengeGame != null))
 							{
 								SendText(m_Target, 100261, m_From.Name); // "{0} has already been challenged."
-                                
+								
 								SendText(m_From, 100262);  // "You are already being challenged."
 								return;
 							}
@@ -3164,7 +3146,7 @@ namespace Server.Engines.XmlSpawner2
 								SendText(m_From, 100261, m_Target.Name);  // "{0} has already been challenged."
 								return;
 							}
-                            
+							
 							// if they accept then assign the challenger fields on their points attachments
 							if(a != null && !a.Deleted)
 							{
@@ -3192,7 +3174,7 @@ namespace Server.Engines.XmlSpawner2
 							// notify the challenged and set up noto
 							SendText(m_Target, 100264, m_From.Name);  // "You have accepted the challenge from {0}!"
 							m_Target.Send( new MobileMoving( m_From, Notoriety.Compute( m_Target, m_From ) ) );
-                            
+							
 							// update the points gump if it is open
 							if(m_Target.HasGump(typeof(PointsGump)))
 							{
