@@ -3007,20 +3007,20 @@ namespace Server.Mobiles
 								// count nearby players
 								if (refobject is Item)
 								{
-									IPooledEnumerable ie = ((Item)refobject).GetClientsInRange(range);
+									IPooledEnumerable ie = ((Item)refobject).GetMobilesInRange(range);
 									foreach (Mobile p in ie )
 									{
-										if (p.AccessLevel == AccessLevel.Player) nplayers++;
+										if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
 									}
 									ie.Free();
 								}
 								else
 									if (refobject is Mobile)
 									{
-										IPooledEnumerable ie = ((Mobile)refobject).GetClientsInRange(range);
+										IPooledEnumerable ie = ((Mobile)refobject).GetMobilesInRange(range);
 										foreach (Mobile p in ie)
 										{
-											if (p.AccessLevel == AccessLevel.Player) nplayers++;
+											if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
 										}
 										ie.Free();
 									}
@@ -4634,19 +4634,19 @@ namespace Server.Mobiles
 							// count nearby players
 							if (o is Item)
 							{
-								IPooledEnumerable ie = ((Item)o).GetClientsInRange(range);
+								IPooledEnumerable ie = ((Item)o).GetMobilesInRange(range);
 								foreach (Mobile p in ie)
 								{
-									if (p.AccessLevel == AccessLevel.Player) nplayers++;
+									if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
 								}
 								ie.Free();
 							}
 							else if (o is Mobile)
 							{
-								IPooledEnumerable ie = ((Mobile)o).GetClientsInRange(range);
+								IPooledEnumerable ie = ((Mobile)o).GetMobilesInRange(range);
 								foreach (Mobile p in ie)
 								{
-									if (p.AccessLevel == AccessLevel.Player) nplayers++;
+									if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
 								}
 								ie.Free();
 							}
@@ -7968,7 +7968,7 @@ namespace Server.Mobiles
 						}
 					if (rangelist != null)
 					{
-						foreach (Mobile p in rangelist)
+						foreach (NetState p in rangelist)
 						{
 							if (p != null)
 							{
