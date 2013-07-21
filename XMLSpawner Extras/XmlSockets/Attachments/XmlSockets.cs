@@ -761,14 +761,10 @@ namespace Server.Engines.XmlSpawner2
 
 			// first see if the target has any existing sockets
 
-			ArrayList plist = XmlAttach.FindAttachments(target,typeof(XmlSockets));
-            
-			XmlSockets s = null;
+			XmlSockets s = XmlAttach.FindAttachment(target,typeof(XmlSockets)) as XmlSockets;
 
-			if(plist != null && plist.Count > 0)
+			if(s != null)
 			{
-				s = plist[0] as XmlSockets;
-
 				// find out how many sockets it has
 				nSockets = s.NSockets;
 			}
@@ -1107,7 +1103,6 @@ namespace Server.Engines.XmlSpawner2
 			}
 		}
 
-		
 		public class AddSocketToTarget : Target
 		{
 			//private CommandEventArgs m_e;
@@ -1135,11 +1130,10 @@ namespace Server.Engines.XmlSpawner2
 				int quantity = DefaultSocketResourceQuantity;
 
 				// see if this has an XmlSocketable attachment that might impose socketing restrictions
-				ArrayList plist = XmlAttach.FindAttachments(targeted,typeof(XmlSocketable));
+				XmlSocketable s = XmlAttach.FindAttachment(targeted, typeof(XmlSocketable)) as XmlSocketable;
 
-				if(plist != null && plist.Count > 0)
+				if(s != null)
 				{
-					XmlSocketable s = plist[0] as XmlSocketable;
 					// get the socketing restrictions
 					maxSockets = s.MaxSockets;
 					// and any difficulty restrictions
@@ -1150,8 +1144,7 @@ namespace Server.Engines.XmlSpawner2
 					resource = s.RequiredResource;
 					quantity = s.ResourceQuantity;
 				} 
-				else
-					if(!CanSocketByDefault && m_extrasockets <= 0)
+				else if(!CanSocketByDefault && m_extrasockets <= 0)
 				{
 					from.SendMessage("This cannot be socketed.");
 					return;
@@ -1161,7 +1154,6 @@ namespace Server.Engines.XmlSpawner2
 				{
 					maxSockets = 0;
 				}
-
 
 				// override maximum socket restrictions
 				maxSockets += m_extrasockets;

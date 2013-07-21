@@ -1225,7 +1225,7 @@ namespace Server.Mobiles
 				// allow empty string specifications to be used to indicate a null string which will match any name
 				if (aname == "") aname = null;
 
-				ArrayList attachments = XmlAttach.FindAttachments(o, attachtype, aname);
+				List<XmlAttachment> attachments = XmlAttach.FindAttachments(o, attachtype, aname);
 
 				if (attachments != null && attachments.Count > 0)
 				{
@@ -1597,7 +1597,7 @@ namespace Server.Mobiles
 				// allow empty string specifications to be used to indicate a null string which will match any name
 				if (aname == "") aname = null;
 
-				ArrayList attachments = XmlAttach.FindAttachments(o, attachtype, aname);
+				List<XmlAttachment> attachments = XmlAttach.FindAttachments(o, attachtype, aname);
 
 				if (attachments != null && attachments.Count > 0)
 				{
