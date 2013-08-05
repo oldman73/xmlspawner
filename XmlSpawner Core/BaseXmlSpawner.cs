@@ -1252,7 +1252,7 @@ namespace Server.Mobiles
 					return "Invalid SKILL format";
 				}
 				SkillName skillname;
-				if(Enum.TryParse(keywordargs[1], true, out skillname))
+				if(TryParse(keywordargs[1], true, out skillname))
 				{
 					if(o is Mobile)
 					{
@@ -1617,7 +1617,7 @@ namespace Server.Mobiles
 						return "Invalid SKILL format";
 					}
 					SkillName skillname;
-					if(Enum.TryParse(keywordargs[1], true, out skillname))
+					if(TryParse(keywordargs[1], true, out skillname))
 					{
 						if (o is Mobile)
 						{
@@ -3467,7 +3467,7 @@ namespace Server.Mobiles
 
 								if (keywordargs.Length > 1)
 								{
-									if(!Enum.TryParse(keywordargs[1], true, out layer))
+									if(!TryParse(keywordargs[1], true, out layer))
 									{ status_str = "Invalid layer"; }
 								}
 
@@ -7982,7 +7982,7 @@ namespace Server.Mobiles
 								if (musicnumber == -1)
 								{
 									MusicName music;
-									if(Enum.TryParse(musicstr[1], true, out music))
+									if(TryParse(musicstr[1], true, out music))
 										p.Send(PlayMusic.GetInstance(music));
 								}
 								else
@@ -8011,7 +8011,7 @@ namespace Server.Mobiles
 					if (musicnumber == -1)
 					{
 						MusicName music;
-						if(Enum.TryParse(musicstr[1], true, out music))
+						if(TryParse(musicstr[1], true, out music))
 							triggermob.Send(PlayMusic.GetInstance(music));
 					}
 					else
@@ -11106,6 +11106,33 @@ namespace Server.Mobiles
 			}
 
 			return list;
+		}
+
+		/// <summary>
+		/// Converts the string representation of the name value of one or more enumerated constants to an equivalent enumerated object. A parameter specifies whether the operation is case-sensitive (default: false). The return value indicates whether the conversion succeeded.
+		/// </summary>
+		/// <param name="tocheck"> The string representation of the enumeration name or underlying value to convert.</param>
+		/// <param name="result">result: if the method returns true, it's a TEnum whose value is represented by value. Otherwise uninitialized parameter.</param>
+		/// <returns> true if the value parameter was converted successfully; otherwise, false. </returns>
+		/// <exception cref="ArgumentException"> TEnum is not an enumeration type. </exception>
+		public static bool TryParse<TEnum>(string tocheck, out TEnum result) where TEnum : struct, IConvertible
+		{
+			return TryParse(tocheck, false, out result);
+		}
+
+		/// <summary>
+		/// Converts the string representation of the name value of one or more enumerated constants to an equivalent enumerated object. A parameter specifies whether the operation is case-sensitive. The return value indicates whether the conversion succeeded.
+		/// </summary>
+		/// <param name="tocheck"> The string representation of the enumeration name or underlying value to convert.</param>
+		/// <param name="ignorecase"> If this parameter is set to true it will ignore case of string tocheck, otherwise it will check case. </param>
+		/// <param name="result">result: if the method returns true, it's a TEnum whose value is represented by value. Otherwise uninitialized parameter.</param>
+		/// <returns> true if the value parameter was converted successfully; otherwise, false. </returns>
+		/// <exception cref="ArgumentException"> TEnum is not an enumeration type. </exception>
+		public static bool TryParse<TEnum>(string tocheck, bool ignorecase, out TEnum result) where TEnum : struct, IConvertible
+		{
+			bool boolean = (tocheck == null ? false : Enum.IsDefined(typeof(TEnum), tocheck));
+			result = (boolean ? (TEnum)Enum.Parse(typeof(TEnum), tocheck) : default(TEnum));
+			return boolean;
 		}
 		#endregion
 	}
