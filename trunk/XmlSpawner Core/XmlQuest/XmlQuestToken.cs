@@ -4,7 +4,6 @@ using Server.Gumps;
 using Server.Network;
 using Server.Mobiles;
 using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 using Server.Targeting;
 using Server.Engines.PartySystem;
@@ -352,7 +351,7 @@ namespace Server.Items
 
                         if (nentries > 0)
                         {
-                            m_Journal = new ArrayList();
+                            m_Journal = new List<XmlQuest.JournalEntry>();
                             for (int i = 0; i < nentries; i++)
                             {
                                 string entryID = reader.ReadString();
@@ -655,8 +654,8 @@ namespace Server.Items
             }
         }
 
-        private ArrayList m_Journal;
-        public ArrayList Journal { get { return m_Journal; } set { m_Journal = value; } }
+        private List<XmlQuest.JournalEntry> m_Journal;
+        public List<XmlQuest.JournalEntry> Journal { get { return m_Journal; } set { m_Journal = value; } }
         private static char[] colondelim = new char[1] { ':' };
 
         public string AddJournalEntry
@@ -686,7 +685,7 @@ namespace Server.Items
 
 
                 // allocate a new journal if none exists
-                if (m_Journal == null) m_Journal = new ArrayList();
+                if (m_Journal == null) m_Journal = new List<XmlQuest.JournalEntry>();
 
                 // go through the existing journal to find a matching ID
                 XmlQuest.JournalEntry foundEntry = null;
@@ -1533,7 +1532,7 @@ namespace Server.Items
             {
                 // need to check to see if any other questtoken items are owned
                 // search the Owners top level pack for an xmlquesttoken
-                ArrayList list = XmlQuest.FindXmlQuest(Owner);
+                List<Item> list = XmlQuest.FindXmlQuest(Owner);
 
                 if (list == null || list.Count == 0)
                 {

@@ -1,12 +1,14 @@
 using System;
 using System.Data;
 using System.IO;
-using Server.Mobiles;
+using System.Collections.Generic;
+using System.Globalization;
+
 using Server;
 using Server.Items;
+using Server.Mobiles;
 using Server.Network;
 using Server.Gumps;
-using System.Collections;
 using Server.Targeting;
 using Server.Engines.XmlSpawner2;
 
@@ -34,23 +36,23 @@ namespace Server.Gumps
 			Closable = false;
 			Dragable = true;
 			AddPage( 0 );
-			AddBackground( 10, 180, 200, 130, 5054 );
+			AddBackground( 10, 185, 200, 130, 5054 );
 
 			if(item is XmlQuestBook)
 			{
-				AddLabel( 20, 185, 33, String.Format("Delete this questbook?") );
-				AddLabel( 20, 205, 33, String.Format("{0} quest(s) will be lost.", item.TotalItems) );
-				AddLabel( 20, 225, 53, item.Name );
+				AddLabel( 20, 190, 33, String.Format("Delete this questbook?") );
+				AddLabel( 20, 210, 33, String.Format("{0} quest(s) will be lost.", item.TotalItems) );
+				AddLabel( 20, 230, 53, item.Name );
+			} 
+			else if(item is IXmlQuest)
+			{
+				AddLabel( 20, 210, 33, String.Format("Delete this quest?") );
+				AddLabel( 20, 230, 53, item.Name );
 			} 
 			else
-				if(item is IXmlQuest)
 			{
-				AddLabel( 20, 205, 33, String.Format("Delete this quest?") );
-				AddLabel( 20, 225, 53, item.Name );
-			} 
-			else
-			{
-				AddLabel( 20, 225, 33, String.Format("Delete this item?") );
+				AddLabel( 20, 210, 33, String.Format("Delete this item?") );
+				AddLabel( 20, 230, 53, item.Name );
 			}
 			AddRadio( 35, 255, 9721, 9724, false, 1 ); // accept/yes radio
 			AddRadio( 135, 255, 9721, 9724, true, 2 ); // decline/no radio
@@ -110,7 +112,7 @@ namespace Server.Gumps
 		private object m_invoker;
 		private BaseXmlSpawner.KeywordTag m_keywordtag;
 		private XmlGumpCallback m_gumpcallback;
-		private ArrayList gumpSelections = new ArrayList();
+		private List<GumpSelection> gumpSelections = new List<GumpSelection>();
 
 		private class GumpSelection
 		{
@@ -132,12 +134,9 @@ namespace Server.Gumps
 			// check for cliloc specification
 			if (text.StartsWith("#"))
 			{
-				try
-				{
-					int cliloc = int.Parse(text.Substring(1, text.Length - 1));
+				int cliloc = 0;
+				if(int.TryParse(text.Substring(1, text.Length - 1), out cliloc))
 					AddHtmlLocalized(x, y, width, height, cliloc, color, background, scrollbar);
-				}
-				catch { }
 			}
 			else
 			{
@@ -214,13 +213,12 @@ namespace Server.Gumps
 				maintext = ParseGumpText(gumptext);
 				nselections = gumpSelections.Count;
 				// the maintext in this case is a width,height specifier so parse it
-				try
+				string [] args = maintext.Split(',');
+				if(args != null && args.Length>1)
 				{
-					string [] args = maintext.Split(',');
-					width = int.Parse(args[0].Trim());
-					height = int.Parse(args[1].Trim());
-				} 
-				catch{}
+					int.TryParse(args[0].Trim(), out width);
+					int.TryParse(args[1].Trim(), out height);
+				}
 			}
 
 			AddImageTiled(  54, 33, width, height, 2624 );
@@ -313,7 +311,7 @@ namespace Server.Gumps
 				{
 					int y = 360 + i*40;
 					AddRadio( 101, y, 9721, 9724, i==0 ? true: false, i ); // accept/yes radio
-					AddHtml( 137, y+4, 250, 40, XmlSimpleGump.Color( ((GumpSelection)gumpSelections[i]).Selection, "FFFFFF" ), false, false );
+					AddHtml( 137, y+4, 250, 40, XmlSimpleGump.Color( gumpSelections[i].Selection, "FFFFFF" ), false, false );
 				}
 
 				LocalAddHtml(maintext, 105, 159, 299, 182, 0xEFEF5A, false, true);
@@ -326,8 +324,8 @@ namespace Server.Gumps
 
 				for(int i=0;i < gumpSelections.Count; i++)
 				{
-					string selection = ((GumpSelection)gumpSelections[i]).Selection;
-					string response = ((GumpSelection)gumpSelections[i]).Response;
+					string selection = gumpSelections[i].Selection;
+					string response = gumpSelections[i].Response;
 
 					int gx = 0;
 					int gy = 0;
@@ -344,7 +342,7 @@ namespace Server.Gumps
 					}
 
 					// process the gumpitem specifications
-					if(args != null && args.Length > 1)
+					if(args.Length > 1)
 					{
 						for(int j=0;j<args.Length;j++)
 						{
@@ -356,20 +354,16 @@ namespace Server.Gumps
 							// syntax is button,gumpid,x,y
 							if(args.Length > 3)
 							{
-								try
-								{						
-									if(args[1].StartsWith("0x"))
-									{
-										gumpid = Convert.ToInt32(args[1],16);
-									} 
-									else
-									{
-										gumpid = int.Parse(args[1]);
-									}
-									gx = int.Parse(args[2]);
-									gy = int.Parse(args[3]);
+								if(args[1].StartsWith("0x"))
+								{
+									int.TryParse(args[1].Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out gumpid);
 								} 
-								catch{}
+								else
+								{
+									int.TryParse(args[1], out gumpid);
+								}
+								int.TryParse(args[2], out gx);
+								int.TryParse(args[3], out gy);
 
 								int buttonid = 1000 + i;
 
@@ -383,12 +377,8 @@ namespace Server.Gumps
 							// syntax is label,x,y,label[,color]
 							if(args.Length > 3)
 							{
-								try
-								{						
-									gx = int.Parse(args[1]);
-									gy = int.Parse(args[2]);
-								} 
-								catch{}
+								int.TryParse(args[1], out gx);
+								int.TryParse(args[2], out gy);
 
 								label = args[3];
 							}
@@ -396,11 +386,7 @@ namespace Server.Gumps
 							color = 0x384;
 							if(args.Length > 4)
 							{
-								try
-								{
-									color = int.Parse(args[4]);
-								} 
-								catch{}
+								int.TryParse(args[4], out color);
 							}
 
 							// add the label
@@ -411,42 +397,41 @@ namespace Server.Gumps
 						{
 							// reparse the specification to allow for the possibility of commas in the html text
 							args = selection.Split(new char[] {','},6);
+							color = 0xEFEF5A;
 
-							// syntax is html,x,y,width,height,text
+							// syntax is html,x,y,width,height,text[,hue] * hue has to be in HEX format, ex: 0xFF00AA (lenght of 8 mandatory!)
 							if(args.Length > 5)
 							{
-								try
-								{						
-									gx = int.Parse(args[1].Trim());
-									gy = int.Parse(args[2].Trim());
-									gwidth = int.Parse(args[3].Trim());
-									gheight = int.Parse(args[4].Trim());
-								} 
-								catch{}
-
-								label = args[5];
+								int.TryParse(args[1].Trim(), out gx);
+								int.TryParse(args[2].Trim(), out gy);
+								int.TryParse(args[3].Trim(), out gwidth);
+								int.TryParse(args[4].Trim(), out gheight);
+								if(args.Length>6 && args[5].StartsWith("0x") && args[5].Trim().Length==8)
+								{
+									if(!int.TryParse(args[5].Trim().Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out color))
+										color=0xEFEF5A;
+									label = args[6];
+								}
+								else
+									label = args[5];
 							}
 
 							// add the html area
 							//AddHtml( gx, gy, gwidth, gheight, label, false, true );
-							LocalAddHtml(label, gx, gy, gwidth, gheight, 0xEFEF5A, false, true);
-						} 
+							LocalAddHtml(label, gx, gy, gwidth, gheight, color, false, true);
+						}
 						else
 							if(args[0].ToLower() == "textentry")
 						{
-							((GumpSelection)gumpSelections[i]).GumpItemType = 1;
+							gumpSelections[i].GumpItemType = 1;
 
 							// syntax is textentry,x,y,width,height[,textcolor][,text]
 							if(args.Length > 4)
 							{
-								try
-								{						
-									gx = int.Parse(args[1].Trim());
-									gy = int.Parse(args[2].Trim());
-									gwidth = int.Parse(args[3].Trim());
-									gheight = int.Parse(args[4].Trim());
-								} 
-								catch{}								
+								int.TryParse(args[1].Trim(), out gx);
+								int.TryParse(args[2].Trim(), out gy);
+								int.TryParse(args[3].Trim(), out gwidth);
+								int.TryParse(args[4].Trim(), out gheight);						
 							}
 							
 							if(args.Length > 5)
@@ -458,13 +443,8 @@ namespace Server.Gumps
 							color = 0x384;
 							if(args.Length > 6)
 							{
-								try
-								{
-									color = int.Parse(args[6]);
-								} 
-								catch{}
+								int.TryParse(args[6], out color);
 							}
-
 
 							AddTextEntry( gx, gy, gwidth, gheight, color, i, label );
 						} 
@@ -477,25 +457,16 @@ namespace Server.Gumps
 							// syntax is radio,gumpid1,gumpid2,x,y[,initialstate]
 							if(args.Length > 4)
 							{
-								
-								try
-								{						
-									gumpid1 = int.Parse(args[1].Trim());
-									gumpid2 = int.Parse(args[2].Trim());
-									gx = int.Parse(args[3].Trim());
-									gy = int.Parse(args[4].Trim());
-								} 
-								catch{}								
+								int.TryParse(args[1].Trim(), out gumpid1);
+								int.TryParse(args[2].Trim(), out gumpid2);
+								int.TryParse(args[3].Trim(), out gx);
+								int.TryParse(args[4].Trim(), out gy);
 							}
 
 							bool initial = false;
 							if(args.Length > 5)
 							{
-								try
-								{
-									initial = bool.Parse(args[5]);
-								} 
-								catch{}
+								bool.TryParse(args[5], out initial);
 							}
 
 							AddRadio( gx, gy, gumpid1, gumpid2, initial, i);
@@ -507,28 +478,20 @@ namespace Server.Gumps
 							// syntax is image,gumpid,x,y[,hue]
 							if(args.Length > 3)
 							{
-								try
-								{						
-									if(args[1].StartsWith("0x"))
-									{
-										gumpid = Convert.ToInt32(args[1],16);
-									} 
-									else
-									{
-										gumpid = int.Parse(args[1]);
-									}
-									gx = int.Parse(args[2]);
-									gy = int.Parse(args[3]);
+								if(args[1].StartsWith("0x"))
+								{
+									int.TryParse(args[1].Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out gumpid);
 								} 
-								catch{}
+								else
+								{
+									int.TryParse(args[1], out gumpid);
+								}
+								int.TryParse(args[2], out gx);
+								int.TryParse(args[3], out gy);
 
 								if(args.Length > 4)
 								{
-									try
-									{
-										color = int.Parse(args[4]);
-									} 
-									catch{}
+									int.TryParse(args[4], out color);
 								}
 
 								// add the image
@@ -542,22 +505,18 @@ namespace Server.Gumps
 							// syntax is imagetiled,gumpid,x,y,width,height
 							if(args.Length > 5)
 							{
-								try
-								{						
-									if(args[1].StartsWith("0x"))
-									{
-										gumpid = Convert.ToInt32(args[1],16);
-									} 
-									else
-									{
-										gumpid = int.Parse(args[1]);
-									}
-									gx = int.Parse(args[2]);
-									gy = int.Parse(args[3]);
-									gwidth = int.Parse(args[4]);
-									gheight = int.Parse(args[5]);
+								if(args[1].StartsWith("0x"))
+								{
+									int.TryParse(args[1].Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out gumpid);
 								} 
-								catch{}
+								else
+								{
+									int.TryParse(args[1], out gumpid);
+								}
+								int.TryParse(args[2], out gx);
+								int.TryParse(args[3], out gy);
+								int.TryParse(args[4], out gwidth);
+								int.TryParse(args[5], out gheight);
 
 								// add the image
 								AddImageTiled( gx, gy, gwidth, gheight, gumpid );
@@ -569,28 +528,20 @@ namespace Server.Gumps
 							// syntax is item,itemid,x,y[,hue]
 							if(args.Length > 3)
 							{
-								try
-								{						
-									if(args[1].StartsWith("0x"))
-									{
-										gumpid = Convert.ToInt32(args[1],16);
-									} 
-									else
-									{
-										gumpid = int.Parse(args[1]);
-									}
-									gx = int.Parse(args[2]);
-									gy = int.Parse(args[3]);
+								if(args[1].StartsWith("0x"))
+								{
+									int.TryParse(args[1].Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out gumpid);
 								} 
-								catch{}
+								else
+								{
+									int.TryParse(args[1], out gumpid);
+								}
+								int.TryParse(args[2], out gx);
+								int.TryParse(args[3], out gy);
 
 								if(args.Length > 4)
 								{
-									try
-									{
-										color = int.Parse(args[4]);
-									} 
-									catch{}
+									int.TryParse(args[4], out color);
 								}
 
 								// add the image
@@ -672,7 +623,7 @@ namespace Server.Gumps
 							if(select >= 0 && select < gumpSelections.Count)
 							{
 								// return the response string for that selection
-								m_gumpcallback( from, m_invoker, ((GumpSelection)gumpSelections[select]).Response);
+								m_gumpcallback( from, m_invoker, gumpSelections[select].Response);
 							}
 						}
 						break;
@@ -689,7 +640,7 @@ namespace Server.Gumps
 							if(select >= 0 && select < gumpSelections.Count)
 							{
 								// return the response string for that selection
-								buttonresponse = ((GumpSelection)gumpSelections[select]).Response;
+								buttonresponse = gumpSelections[select].Response;
 							}
 						}
 
@@ -699,14 +650,14 @@ namespace Server.Gumps
 
 							if(radiostate >= 0 && radiostate < gumpSelections.Count)
 							{
-								radioresponse = ((GumpSelection)gumpSelections[radiostate]).Response;
+								radioresponse = gumpSelections[radiostate].Response;
 							}
 						}
 
 						// check for any textentries
 						for(int j=0;j<gumpSelections.Count;j++)
 						{
-							if(((GumpSelection)gumpSelections[j]).GumpItemType == 1)
+							if(gumpSelections[j].GumpItemType == 1)
 							{
 								try
 								{
