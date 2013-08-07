@@ -353,9 +353,9 @@ namespace Server.Gumps
                     for (int i = 0; i < questitem.Journal.Count; i++)
                     {
                         journaltext += "<u>";
-                        journaltext += ((XmlQuest.JournalEntry)questitem.Journal[i]).EntryID;
+                        journaltext += questitem.Journal[i].EntryID;
                         journaltext += ":</u><br>";
-                        journaltext += ((XmlQuest.JournalEntry)questitem.Journal[i]).EntryText;
+                        journaltext += questitem.Journal[i].EntryText;
                         journaltext += "<br><br>";
                     }
                     AddHtml(100, 90, 270, 300, journaltext, true, true);
@@ -502,6 +502,7 @@ namespace Server.Gumps
                     state.Mobile.SendGump(new XmlQuestStatusGump(m_questitem, m_gumptitle, m_X, m_Y, m_solid, m_screen));
                     break;
                 case 800:
+                    if(!m_questitem.CanSeeReward) return;
                     if (m_questitem.RewardItem != null || m_questitem.RewardAttachment != null)
                     {
                         // open a new status gump
