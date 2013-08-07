@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using Server;
 using Server.Gumps;
 using Server.Items;
@@ -17,7 +17,7 @@ namespace Server.Gumps
 	{
 		private Mobile m_From;
 
-		private ArrayList m_List;
+		private List<object> m_List;
 
 		private int m_Page;
 
@@ -38,7 +38,7 @@ namespace Server.Gumps
 			int slots = 0;
 			int count = 0;
 
-			ArrayList list = m_List;
+			List<object> list = m_List;
 
 			for ( int i = index; i >= 0 && i < list.Count; ++i )
 			{
@@ -128,7 +128,7 @@ namespace Server.Gumps
 		}
 
 
-		public XMLQuestLogGump( Mobile from, int page, ArrayList list ) : base( 12, 24 )
+		public XMLQuestLogGump( Mobile from, int page, List<object> list ) : base( 12, 24 )
 		{
 			if(from == null) return;
 
@@ -143,7 +143,7 @@ namespace Server.Gumps
 			{
 				// make a new list based on the number of items in the book
 				int nquests = 0;
-				list = new ArrayList( );
+				list = new List<object>( );
 
 				// find all quest items in the players pack
 				if(from.Backpack != null)
