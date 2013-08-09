@@ -1559,7 +1559,7 @@ namespace Server.Items
 		public void CheckAutoReward()
 		{
 			if (!this.Deleted && AutoReward && IsCompleted && Owner != null &&
-				((RewardItem != null && !m_RewardItem.Deleted) || (RewardAttachment != null && !m_RewardAttachment.Deleted)) || RewardAction != null)
+				((RewardItem != null && !m_RewardItem.Deleted) || (RewardAttachment != null && !m_RewardAttachment.Deleted) || RewardAction != null))
 			{
 				if (RewardItem != null)
 				{
