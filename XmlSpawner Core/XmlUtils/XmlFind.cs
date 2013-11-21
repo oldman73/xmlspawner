@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Multis;
@@ -2014,7 +2015,7 @@ namespace Server.Mobiles
 			}
 
 
-			ArrayList savelist = new ArrayList();
+			List<XmlSpawner> savelist = new List<XmlSpawner>();
 
 			for (int i = 0; i < m_SearchList.Count; i++)
 			{
@@ -2027,7 +2028,7 @@ namespace Server.Mobiles
 					if (o is XmlSpawner)
 					{
 						// add it to the saves list
-						savelist.Add(o);
+						savelist.Add((XmlSpawner)o);
 					}
 				}
 			}

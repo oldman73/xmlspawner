@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Data;
 using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 using Server;
 using Server.Items;
@@ -27,7 +26,7 @@ namespace Server.Mobiles
 	{
 		#region Initialization
 
-		private static ArrayList ProtectedPropertiesList = new ArrayList();
+		private static List<BaseXmlSpawner.ProtectedProperty> ProtectedPropertiesList = new List<BaseXmlSpawner.ProtectedProperty>();
 
 		private class ProtectedProperty
 		{
@@ -62,6 +61,8 @@ namespace Server.Mobiles
 			// register restricted properties that cannot be set by the spawner
 			ProtectedPropertiesList.Add(new ProtectedProperty(typeof(Mobile), "accesslevel"));
 			ProtectedPropertiesList.Add(new ProtectedProperty(typeof(Item), "stafflevel"));
+			//fill the list
+			//InitializeHash();
 		}
 
 		#endregion
@@ -80,7 +81,7 @@ namespace Server.Mobiles
 
 		public class TypeInfo
 		{
-			public ArrayList plist = new ArrayList();      // hold propertyinfo list
+			public List<PropertyInfo> plist = new List<PropertyInfo>();      // hold propertyinfo list
 			public Type t;
 		}
 
@@ -214,6 +215,7 @@ namespace Server.Mobiles
 			SETACCOUNTTAG,
 			FOREACH,
 			GIVE,
+			TAKEGIVE,
 			TAKE,
 			GUMP,
 			TAKEBYTYPE,
@@ -265,6 +267,7 @@ namespace Server.Mobiles
 			KILL,
 			ATTACH,
 			FACETO,
+			SETVALUE,
 			FLASH,
 			PRIVMSG
 		}
@@ -354,17 +357,17 @@ namespace Server.Mobiles
 		// if this is null, then COMMANDS can only be issued when triggered by players of the appropriate accesslevel
 		private static string CommandMobileName = null;
 
-		private static Hashtable typeKeywordHash;
-		private static Hashtable typemodKeywordHash;
-		private static Hashtable valueKeywordHash;
-		private static Hashtable valuemodKeywordHash;
-		private static Hashtable itemKeywordHash;
+		private static Dictionary<string, BaseXmlSpawner.typeKeyword> typeKeywordHash = new Dictionary<string, BaseXmlSpawner.typeKeyword>();
+		private static Dictionary<string, BaseXmlSpawner.typemodKeyword> typemodKeywordHash = new Dictionary<string, BaseXmlSpawner.typemodKeyword>();
+		private static Dictionary<string, BaseXmlSpawner.valueKeyword> valueKeywordHash = new Dictionary<string, BaseXmlSpawner.valueKeyword>();
+		private static Dictionary<string, BaseXmlSpawner.valuemodKeyword> valuemodKeywordHash = new Dictionary<string, BaseXmlSpawner.valuemodKeyword>();
+		private static Dictionary<string, BaseXmlSpawner.itemKeyword> itemKeywordHash = new Dictionary<string, BaseXmlSpawner.itemKeyword>();
 
 		private static char[] slashdelim = new char[1] { '/' };
 		private static char[] commadelim = new char[1] { ',' };
 		private static char[] spacedelim = new char[1] { ' ' };
 		private static char[] semicolondelim = new char[1] { ';' };
-		private static char[] literalend = new char[1] { '�' };
+		private static char[] literalend = new char[1] { '§' };
 
 		#endregion
 
@@ -372,56 +375,56 @@ namespace Server.Mobiles
 
 		public static bool IsValueKeyword(string str)
 		{
-			if (str == null) return false;
+			if (string.IsNullOrEmpty(str) || !char.IsUpper(str[0])) return false;
 
-			if (valueKeywordHash == null) InitializeHash();
+			//if (valueKeywordHash == null) InitializeHash();
 
-			return valueKeywordHash.Contains(str);
+			return valueKeywordHash.ContainsKey(str);
 		}
 
 		public static bool IsValuemodKeyword(string str)
 		{
-			if (str == null) return false;
+			if (string.IsNullOrEmpty(str) || !char.IsUpper(str[0])) return false;
 
-			if (valuemodKeywordHash == null) InitializeHash();
+			//if (valuemodKeywordHash == null) InitializeHash();
 
-			return valuemodKeywordHash.Contains(str);
+			return valuemodKeywordHash.ContainsKey(str);
 		}
 
 		public static bool IsSpecialItemKeyword(string typeName)
 		{
-			if (string.IsNullOrEmpty(typeName) || !Char.IsUpper(typeName[0])) return false;
+			if (string.IsNullOrEmpty(typeName) || !char.IsUpper(typeName[0])) return false;
 
-			if (itemKeywordHash == null) InitializeHash();
+			//if (itemKeywordHash == null) InitializeHash();
 
-			return itemKeywordHash.Contains(typeName);
+			return itemKeywordHash.ContainsKey(typeName);
 		}
 
 		public static bool IsTypeKeyword(string typeName)
 		{
-			if (string.IsNullOrEmpty(typeName) || !Char.IsUpper(typeName[0])) return false;
+			if (string.IsNullOrEmpty(typeName) || !char.IsUpper(typeName[0])) return false;
 
-			if (typeKeywordHash == null) InitializeHash();
+			//if (typeKeywordHash == null) InitializeHash();
 
-			return (typeKeywordHash.Contains(typeName));
+			return (typeKeywordHash.ContainsKey(typeName));
 		}
 
 		public static bool IsTypemodKeyword(string typeName)
 		{
-			if (string.IsNullOrEmpty(typeName) || !Char.IsUpper(typeName[0])) return false;
+			if (string.IsNullOrEmpty(typeName) || !char.IsUpper(typeName[0])) return false;
 
-			if (typemodKeywordHash == null) InitializeHash();
+			//if (typemodKeywordHash == null) InitializeHash();
 
-			return (typemodKeywordHash.Contains(typeName));
+			return (typemodKeywordHash.ContainsKey(typeName));
 		}
 
 		public static bool IsTypeOrItemKeyword(string typeName)
 		{
 			if (string.IsNullOrEmpty(typeName) || !Char.IsUpper(typeName[0])) return false;
 
-			if (typeKeywordHash == null || itemKeywordHash == null) InitializeHash();
+			//if (typeKeywordHash == null || itemKeywordHash == null) InitializeHash();
 
-			return (typeKeywordHash.Contains(typeName) || itemKeywordHash.Contains(typeName));
+			return (typeKeywordHash.ContainsKey(typeName) || itemKeywordHash.ContainsKey(typeName));
 		}
 
 		private static void AddTypeKeyword(string name)
@@ -455,37 +458,38 @@ namespace Server.Mobiles
 
 			name = name.Trim().ToUpper();
 
-			if (IsTypeKeyword(name))
-			{
+			//if (IsTypeKeyword(name))
+			//{
 				typeKeywordHash.Remove(name);
-			}
-			if (IsTypemodKeyword(name))
-			{
+			//}
+			//if (IsTypemodKeyword(name))
+			//{
 				typemodKeywordHash.Remove(name);
-			}
-			if (IsValueKeyword(name))
-			{
+			//}
+			//if (IsValueKeyword(name))
+			//{
 				valueKeywordHash.Remove(name);
-			}
-			if (IsValuemodKeyword(name))
-			{
+			//}
+			//if (IsValuemodKeyword(name))
+			//{
 				valuemodKeywordHash.Remove(name);
-			}
-			if (IsSpecialItemKeyword(name))
-			{
+			//}
+			//if (IsSpecialItemKeyword(name))
+			//{
 				itemKeywordHash.Remove(name);
-			}
+			//}
 		}
 
 
-		public static void InitializeHash()
+		public static void Configure()
 		{
 			// set up the keyword hash tables
-			typeKeywordHash = new Hashtable();
+			// already set at startup time
+			/*typeKeywordHash = new Hashtable();
 			typemodKeywordHash = new Hashtable();
 			itemKeywordHash = new Hashtable();
 			valueKeywordHash = new Hashtable();
-			valuemodKeywordHash = new Hashtable();
+			valuemodKeywordHash = new Hashtable();*/
 
 			// Type keywords
 			// spawned as primary objects
@@ -503,6 +507,7 @@ namespace Server.Mobiles
 			AddTypeKeyword("SETACCOUNTTAG");
 			AddTypeKeyword("FOREACH");
 			AddTypeKeyword("GIVE");
+			AddTypeKeyword("TAKEGIVE");
 			AddTypeKeyword("TAKE");
 			AddTypeKeyword("GUMP");
 			AddTypeKeyword("TAKEBYTYPE");
@@ -553,6 +558,7 @@ namespace Server.Mobiles
 			AddTypemodKeyword("KILL");
 			AddTypemodKeyword("ATTACH");
 			AddTypemodKeyword("FACETO");
+			AddTypemodKeyword("SETVALUE");
 			AddTypemodKeyword("FLASH");
 			AddTypemodKeyword("PRIVMSG");
 
@@ -689,11 +695,11 @@ namespace Server.Mobiles
 					m_TrigMob = spawner.TriggerMob;
 					if (spawner.m_KeywordTagList == null)
 					{
-						spawner.m_KeywordTagList = new ArrayList();
+						spawner.m_KeywordTagList = new List<BaseXmlSpawner.KeywordTag>();
 					}
 					// calculate the serial index of the new tag by adding one to the last one if there is one, otherwise just reset to 0
 					if (spawner.m_KeywordTagList.Count > 0)
-						Serial = ((KeywordTag)(spawner.m_KeywordTagList[spawner.m_KeywordTagList.Count - 1])).Serial + 1;
+						Serial = spawner.m_KeywordTagList[spawner.m_KeywordTagList.Count - 1].Serial + 1;
 					else
 						Serial = 0;
 
@@ -940,9 +946,9 @@ namespace Server.Mobiles
 		{
 			for (int i = 0; i < spawner.m_KeywordTagList.Count; i++)
 			{
-				if (serial == ((KeywordTag)spawner.m_KeywordTagList[i]).Serial)
+				if (serial == spawner.m_KeywordTagList[i].Serial)
 				{
-					return ((KeywordTag)spawner.m_KeywordTagList[i]);
+					return spawner.m_KeywordTagList[i];
 				}
 			}
 			return (null);
@@ -970,7 +976,7 @@ namespace Server.Mobiles
 				try
 				{
 					object arrayvalue = p.GetValue(o, null);
-					value = ((IList)arrayvalue)[index];
+					value = ((IList<object>)arrayvalue)[index];
 				}
 				catch { }
 			}
@@ -1116,7 +1122,7 @@ namespace Server.Mobiles
 				{
 					object arrayvalue = p.GetValue(obj, null);
 
-					object po = ((IList)arrayvalue)[0];
+					object po = ((IList<object>)arrayvalue)[0];
 
 					Type atype = po.GetType();
 
@@ -1144,7 +1150,6 @@ namespace Server.Mobiles
 			return null;
 		}
 
-
 		public static string InternalSetValue(Mobile from, object o, PropertyInfo p, string value, bool shouldLog, int index)
 		{
 			object toSet = null;
@@ -1169,7 +1174,7 @@ namespace Server.Mobiles
 					try
 					{
 						object arrayvalue = p.GetValue(o, null);
-						((IList)arrayvalue)[index] = toSet;
+						((IList<object>)arrayvalue)[index] = toSet;
 					}
 					catch { }
 				}
@@ -1203,7 +1208,6 @@ namespace Server.Mobiles
 			// parse the strings of the form property.attribute into two parts
 			// first get the property
 			string[] arglist = ParseString(name, 2, ".");
-
 
 			string propname = arglist[0];
 
@@ -1252,13 +1256,17 @@ namespace Server.Mobiles
 					return "Invalid SKILL format";
 				}
 				SkillName skillname;
+#if Framework_4_0
+				if(Enum.TryParse(keywordargs[1], true, out skillname))
+#else
 				if(TryParse(keywordargs[1], true, out skillname))
+#endif
 				{
 					if(o is Mobile)
 					{
 						Skill skill = ((Mobile)o).Skills[skillname];
 						double d;
-						if(double.TryParse(value, out d))
+						if(double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out d))
 						{
 							skill.Base = d;
 							return "Property has been set.";
@@ -1617,7 +1625,11 @@ namespace Server.Mobiles
 						return "Invalid SKILL format";
 					}
 					SkillName skillname;
+#if Framework_4_0
+					if(Enum.TryParse(keywordargs[1], true, out skillname))
+#else
 					if(TryParse(keywordargs[1], true, out skillname))
+#endif
 					{
 						if (o is Mobile)
 						{
@@ -1734,7 +1746,7 @@ namespace Server.Mobiles
 						try
 						{
 							object arrayvalue = plookup.GetValue(o, null);
-							po = ((IList)arrayvalue)[index];
+							po = ((IList<object>)arrayvalue)[index];
 						}
 						catch { }
 					}
@@ -1770,7 +1782,7 @@ namespace Server.Mobiles
 								try
 								{
 									object arrayvalue = p.GetValue(o, null);
-									po = ((IList)arrayvalue)[index];
+									po = ((IList<object>)arrayvalue)[index];
 								}
 								catch { }
 							}
@@ -2014,7 +2026,7 @@ namespace Server.Mobiles
 					{
 						if (IsValuemodKeyword(value_keywordargs[0]))
 						{
-							valuemodKeyword kw = (valuemodKeyword)valuemodKeywordHash[value_keywordargs[0]];
+							valuemodKeyword kw = valuemodKeywordHash[value_keywordargs[0]];
 
 							if (kw == valuemodKeyword.RND)
 							{
@@ -2190,8 +2202,6 @@ namespace Server.Mobiles
 								// syntax is GETVAR,varname
 								if (value_keywordargs.Length > 1)
 								{
-
-
 									string varname = value_keywordargs[1];
 
 									// look for the xmllocalvariable attachment with the given name
@@ -2407,7 +2417,7 @@ namespace Server.Mobiles
 										{
 											relativeto = ((XmlAttachment)o).AttachedTo;
 										}
-										ArrayList nearbylist = GetNearbyObjects(relativeto, targetname, targettype, typestr, range, searchcontainers, null);
+										List<object> nearbylist = GetNearbyObjects(relativeto, targetname, targettype, typestr, range, searchcontainers, null);
 
 										string resultstr = null;
 
@@ -2755,7 +2765,7 @@ namespace Server.Mobiles
 									{
 										double d0, d1;
 										
-										if(double.TryParse(value_keywordargs[1], out d0) && double.TryParse(value_keywordargs[2], out d1))
+										if(double.TryParse(value_keywordargs[1], NumberStyles.Any, CultureInfo.InvariantCulture, out d0) && double.TryParse(value_keywordargs[2], NumberStyles.Any, CultureInfo.InvariantCulture, out d1))
 										{
 											incvalue = String.Format("{0}", Utility.RandomMinMax((int)(10000*d0), (int)(10000*d1)) / 10000.0);
 										}
@@ -2788,7 +2798,7 @@ namespace Server.Mobiles
 										string tmpstr = currentvalue;
 										// should use the actual ptype info to do the multiplication.  Maybe later.
 										double d0,d1;
-										if(double.TryParse(currentvalue, out d0) && double.TryParse(incvalue, out d1))
+										if(double.TryParse(currentvalue, NumberStyles.Any, CultureInfo.InvariantCulture, out d0) && double.TryParse(incvalue, NumberStyles.Any, CultureInfo.InvariantCulture, out d1))
 										{
 											tmpstr = ((int)(d0*d1)).ToString();
 										}
@@ -2857,7 +2867,7 @@ namespace Server.Mobiles
 
 										// should use the actual ptype info to do the addition.  Maybe later.
 										double d0,d1;
-										if(double.TryParse(currentvalue, out d0) && double.TryParse(incvalue, out d1))
+										if(double.TryParse(currentvalue, NumberStyles.Any, CultureInfo.InvariantCulture, out d0) && double.TryParse(incvalue, NumberStyles.Any, CultureInfo.InvariantCulture, out d1))
 										{
 											tmpstr=((int)(d0+d1)).ToString();
 										}
@@ -3014,17 +3024,15 @@ namespace Server.Mobiles
 									}
 									ie.Free();
 								}
-								else
-									if (refobject is Mobile)
+								else if (refobject is Mobile)
+								{
+									IPooledEnumerable ie = ((Mobile)refobject).GetMobilesInRange(range);
+									foreach (Mobile p in ie)
 									{
-										IPooledEnumerable ie = ((Mobile)refobject).GetMobilesInRange(range);
-										foreach (Mobile p in ie)
-										{
-											if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
-										}
-										ie.Free();
+										if (p.Player && p.AccessLevel == AccessLevel.Player) nplayers++;
 									}
-
+									ie.Free();
+								}
 
 								string result = SetPropertyValue(spawner, o, arglist[0], nplayers.ToString());
 
@@ -3101,7 +3109,7 @@ namespace Server.Mobiles
 						}
 						else if (IsTypemodKeyword(keywordargs[0]))
 						{
-							typemodKeyword kw = (typemodKeyword)typemodKeywordHash[keywordargs[0]];
+							typemodKeyword kw = typemodKeywordHash[keywordargs[0]];
 
 							if (kw == typemodKeyword.MUSIC)
 							{
@@ -3467,7 +3475,11 @@ namespace Server.Mobiles
 
 								if (keywordargs.Length > 1)
 								{
+#if Framework_4_0
+									if(!Enum.TryParse(keywordargs[1], true, out layer))
+#else
 									if(!TryParse(keywordargs[1], true, out layer))
+#endif
 									{ status_str = "Invalid layer"; }
 								}
 
@@ -3477,6 +3489,7 @@ namespace Server.Mobiles
 									{
 										remove = true;
 									}
+									else bool.TryParse(keywordargs[2], out remove);
 								}
 
 								if (o is Mobile && layer != Layer.Invalid)
@@ -3842,6 +3855,30 @@ namespace Server.Mobiles
 								if (arglist.Length < 2) break;
 								remainder = singlearglist[1];
 							}
+							else if (kw == typemodKeyword.SETVALUE)
+							{
+								// syntax is SETVALUE,varname,value,duration - it's a wrapper for xmlvalue
+								if (keywordargs.Length > 3)
+								{
+									int val;
+									double duration;
+									int.TryParse(keywordargs[2], out val);
+									double.TryParse(keywordargs[3], NumberStyles.Any, CultureInfo.InvariantCulture, out duration);
+									XmlValue x = (XmlValue)XmlAttach.FindAttachment(o, typeof(XmlValue), keywordargs[1]);
+									if(x!=null)
+									{
+										x.Value+=val;
+										x.Expiration=TimeSpan.FromMinutes(duration);
+									}
+									else
+									{
+										XmlAttach.AttachTo(o, new XmlValue(keywordargs[1], val, duration));
+									}
+								}
+
+								if (arglist.Length < 2) break;
+								remainder = singlearglist[1];
+							}
 							else if (kw == typemodKeyword.FLASH)
 							{
 								//the mobile, only player, will get a flash effect
@@ -4038,7 +4075,7 @@ namespace Server.Mobiles
 
 			// look up the info in the current list
 
-			if (spawner.PropertyInfoList == null) spawner.PropertyInfoList = new ArrayList();
+			if (spawner.PropertyInfoList == null) spawner.PropertyInfoList = new List<TypeInfo>();
 
 			PropertyInfo pinfo = null;
 			TypeInfo tinfo = null;
@@ -4178,7 +4215,7 @@ namespace Server.Mobiles
 					// then look for a keyword
 					else if (IsValueKeyword(pname))
 					{
-						valueKeyword kw = (valueKeyword)valueKeywordHash[pname];
+						valueKeyword kw = valueKeywordHash[pname];
 
 						//if(pname == "GETONMOB" && arglist.Length > 2)
 						if ((kw == valueKeyword.GETONMOB) && arglist.Length > 2)
@@ -4310,7 +4347,7 @@ namespace Server.Mobiles
 								{
 									relativeto = ((XmlAttachment)o).AttachedTo;
 								}
-								ArrayList nearbylist = GetNearbyObjects(relativeto, targetname, targettype, typestr, range, searchcontainers, null);
+								List<object> nearbylist = GetNearbyObjects(relativeto, targetname, targettype, typestr, range, searchcontainers, null);
 
 								// apply the properties from the first valid thing on the list
 								foreach (object nearbyobj in nearbylist)
@@ -4447,7 +4484,7 @@ namespace Server.Mobiles
 								ptype = typeof(int);
 
 								// get all of the currently active spawns with the specified subgroup
-								ArrayList so = XmlSpawner.GetSpawnedList(spawner, subgroup);
+								List<object> so = XmlSpawner.GetSpawnedList(spawner, subgroup);
 
 								if (so == null) return "0";
 
@@ -4632,7 +4669,14 @@ namespace Server.Mobiles
 							int.TryParse(arglist[1], out range);
 
 							// count nearby players
-							if (o is Item)
+							if(spawner!=null && spawner.SpawnRegion!=null && range<0)
+							{
+								foreach(Mobile p in spawner.SpawnRegion.GetPlayers())
+								{
+									if (p.AccessLevel <= spawner.TriggerAccessLevel) nplayers++;
+								}
+							}
+							else if (o is Item)
 							{
 								IPooledEnumerable ie = ((Item)o).GetMobilesInRange(range);
 								foreach (Mobile p in ie)
@@ -5143,7 +5187,7 @@ namespace Server.Mobiles
 									double val1=0,val2=0;
 									if (hasequal)
 									{
-										if(double.TryParse(value1, out val1) && double.TryParse(value2, out val2))
+										if(double.TryParse(value1, NumberStyles.Any, CultureInfo.InvariantCulture, out val1) && double.TryParse(value2, NumberStyles.Any, CultureInfo.InvariantCulture, out val2))
 										{
 											if(val1==val2)
 												return !invertreturn;
@@ -5155,7 +5199,7 @@ namespace Server.Mobiles
 									}
 									else if (hasnotequals)
 									{
-										if(double.TryParse(value1, out val1) && double.TryParse(value2, out val2))
+										if(double.TryParse(value1, NumberStyles.Any, CultureInfo.InvariantCulture, out val1) && double.TryParse(value2, NumberStyles.Any, CultureInfo.InvariantCulture, out val2))
 										{
 											if(val1!=val2)
 												return !invertreturn;
@@ -5167,7 +5211,7 @@ namespace Server.Mobiles
 									}
 									else if (hasgreaterthan)
 									{
-										if(double.TryParse(value1, out val1) && double.TryParse(value2, out val2))
+										if(double.TryParse(value1, NumberStyles.Any, CultureInfo.InvariantCulture, out val1) && double.TryParse(value2, NumberStyles.Any, CultureInfo.InvariantCulture, out val2))
 										{
 											if(val1>val2)
 												return !invertreturn;
@@ -5176,7 +5220,7 @@ namespace Server.Mobiles
 									}
 									else if (haslessthan)
 									{
-										if(double.TryParse(value1, out val1) && double.TryParse(value2, out val2))
+										if(double.TryParse(value1, NumberStyles.Any, CultureInfo.InvariantCulture, out val1) && double.TryParse(value2, NumberStyles.Any, CultureInfo.InvariantCulture, out val2))
 										{
 											if(val1<val2)
 												return !invertreturn;
@@ -5270,7 +5314,7 @@ namespace Server.Mobiles
 			return (targetname == "*") || (name == targetname) || (targetname != null && targetname.Length == 0 && name == null);
 		}
 
-		private static void GetItemsIn(Item source, string targetname, Type targettype, string typestr, ref ArrayList nearbylist, string proptest)
+		private static void GetItemsIn(Item source, string targetname, Type targettype, string typestr, ref List<object> nearbylist, string proptest)
 		{
 			string status_str;
 			if (source != null && source.Items != null && nearbylist != null)
@@ -5297,11 +5341,11 @@ namespace Server.Mobiles
 			}
 		}
 
-		private static ArrayList GetNearbyObjects(object invoker, string targetname, Type targettype, string typestr, int range, bool searchcontainers, string proptest)
+		private static List<object> GetNearbyObjects(object invoker, string targetname, Type targettype, string typestr, int range, bool searchcontainers, string proptest)
 		{
 			IPooledEnumerable itemlist = null;
 			IPooledEnumerable mobilelist = null;
-			ArrayList nearbylist = new ArrayList();
+			List<object> nearbylist = new List<object>();
 			string status_str;
 
 			// get nearby items
@@ -5341,7 +5385,7 @@ namespace Server.Mobiles
 
 
 					}
-
+					itemlist.Free();
 				}
 			}
 
@@ -5675,7 +5719,7 @@ namespace Server.Mobiles
 			return itemlist;
 		}
 
-		public static ArrayList SearchPackListForItemType(Container pack, string targetName, ArrayList itemlist)
+		public static List<Item> SearchPackListForItemType(Container pack, string targetName, List<Item> itemlist)
 		{
 			if (pack != null && !pack.Deleted && targetName != null && targetName.Length > 0)
 			{
@@ -5688,7 +5732,7 @@ namespace Server.Mobiles
 
 				for (int i = 0; i < packlist.Count; ++i)
 				{
-					Item item = (Item)packlist[i];
+					Item item = packlist[i];
 					if (item != null && !item.Deleted && item is Container)
 					{
 						itemlist = SearchPackListForItemType((Container)item, targetName, itemlist);
@@ -5704,9 +5748,9 @@ namespace Server.Mobiles
 			return itemlist;
 		}
 
-		public static ArrayList FindItemListByType(Mobile m, string targetName, bool searchbank)
+		public static List<Item> FindItemListByType(Mobile m, string targetName, bool searchbank)
 		{
-			ArrayList itemlist = new ArrayList();
+			List<Item> itemlist = new List<Item>();
 
 			if (m != null && !m.Deleted && targetName != null && targetName.Length > 0)
 			{
@@ -5717,7 +5761,7 @@ namespace Server.Mobiles
 
 				for (int i = 0; i < packlist.Count; ++i)
 				{
-					Item item = (Item)packlist[i];
+					Item item = packlist[i];
 
 					// dont search bank boxes
 					if (item is BankBox && !searchbank) continue;
@@ -6038,7 +6082,6 @@ namespace Server.Mobiles
 				objoffset++;
 			}
 
-
 			Item testitem = SearchMobileForItem(m, itemname, typestr, false, equippedonly);
 
 			// found the item
@@ -6098,10 +6141,9 @@ namespace Server.Mobiles
 
 		public static Item FindItemByName(XmlSpawner fromspawner, string name, string typestr)
 		{
-			if (name == null) return (Item)null;
+			if (name == null) return null;
 
 			int count = 0;
-
 
 			Item founditem = FindInRecentItemSearchList(fromspawner, name, typestr);
 
@@ -6146,12 +6188,12 @@ namespace Server.Mobiles
 				return (founditem);
 			}
 			else
-				return (Item)null;
+				return null;
 		}
 
 		public static Mobile FindMobileByName(XmlSpawner fromspawner, string name, string typestr)
 		{
-			if (name == null) return (Mobile)null;
+			if (name == null) return null;
 
 			int count = 0;
 
@@ -6190,49 +6232,61 @@ namespace Server.Mobiles
 				return (foundmobile);
 			}
 			else
-				return (Mobile)null;
+				return null;
 		}
 
 		public static XmlSpawner FindSpawnerByName(XmlSpawner fromspawner, string name)
 		{
-			if (name == null) return (XmlSpawner)null;
+			if (name==null) return null;
 
-			int count = 0;
-
-			// do a quick search through the recent search list to see if it is there
-			XmlSpawner foundspawner = FindInRecentSpawnerSearchList(fromspawner, name);
-
-			if (foundspawner != null) return foundspawner;
-
-			// search through all xmlspawners in the world and find one with a matching name
-			foreach (Item item in World.Items.Values)
+			if (name.StartsWith("0x"))
 			{
-				if (item is XmlSpawner)
+				int serial = -1;
+				try
 				{
-					XmlSpawner spawner = (XmlSpawner)item;
-					if (!spawner.Deleted && (String.Compare(spawner.Name, name, true) == 0))
-					{
-						foundspawner = spawner;
-
-						count++;
-						// added the break in to return the first match instead of forcing uniqueness (overrides the count test)
-						break;
-					}
-					//if(count > 1) break;
+					serial = Convert.ToInt32(name, 16);
 				}
-			}
-
-			// if a unique item is found then success
-			if (count == 1)
-			{
-				// add this to the recent search list
-				AddToRecentSpawnerSearchList(fromspawner, foundspawner);
-
-				return (foundspawner);
+				catch { }
+				return World.FindEntity(serial) as XmlSpawner;
 			}
 			else
-				return (XmlSpawner)null;
+			{
+				// do a quick search through the recent search list to see if it is there
+			XmlSpawner foundspawner = FindInRecentSpawnerSearchList(fromspawner, name);
+	
+				if (foundspawner != null) return foundspawner;
 
+				int count=0;
+	
+				// search through all xmlspawners in the world and find one with a matching name
+				foreach (Item item in World.Items.Values)
+				{
+					if (item is XmlSpawner)
+					{
+						XmlSpawner spawner = (XmlSpawner)item;
+						if (!spawner.Deleted && (String.Compare(spawner.Name, name, true) == 0))
+						{
+							foundspawner = spawner;
+	
+							count++;
+							// added the break in to return the first match instead of forcing uniqueness (overrides the count test)
+							break;
+						}
+						//if(count > 1) break;
+					}
+				}
+	
+				// if a unique item is found then success
+				if (count == 1)
+				{
+					// add this to the recent search list
+					AddToRecentSpawnerSearchList(fromspawner, foundspawner);
+	
+					return (foundspawner);
+				}
+				else
+					return null;
+			}
 		}
 
 		public static void AddToRecentSpawnerSearchList(XmlSpawner spawner, XmlSpawner target)
@@ -6241,7 +6295,7 @@ namespace Server.Mobiles
 
 			if (spawner.RecentSpawnerSearchList == null)
 			{
-				spawner.RecentSpawnerSearchList = new ArrayList();
+				spawner.RecentSpawnerSearchList = new List<XmlSpawner>();
 			}
 			spawner.RecentSpawnerSearchList.Add(target);
 
@@ -6256,7 +6310,7 @@ namespace Server.Mobiles
 		{
 			if (spawner == null || name == null || spawner.RecentSpawnerSearchList == null) return null;
 
-			ArrayList deletelist = null;
+			List<XmlSpawner> deletelist = null;
 			XmlSpawner foundspawner = null;
 
 			foreach (XmlSpawner s in spawner.RecentSpawnerSearchList)
@@ -6265,7 +6319,7 @@ namespace Server.Mobiles
 				{
 					// clean it up
 					if (deletelist == null)
-						deletelist = new ArrayList();
+						deletelist = new List<XmlSpawner>();
 					deletelist.Add(s);
 				}
 				else
@@ -6291,7 +6345,7 @@ namespace Server.Mobiles
 
 			if (spawner.RecentItemSearchList == null)
 			{
-				spawner.RecentItemSearchList = new ArrayList();
+				spawner.RecentItemSearchList = new List<Item>();
 			}
 
 			spawner.RecentItemSearchList.Add(target);
@@ -6307,7 +6361,7 @@ namespace Server.Mobiles
 		{
 			if (spawner == null || name == null || spawner.RecentItemSearchList == null) return null;
 
-			ArrayList deletelist = null;
+			List<Item> deletelist = null;
 			Item founditem = null;
 
 			Type targettype = null;
@@ -6322,7 +6376,7 @@ namespace Server.Mobiles
 				{
 					// clean it up
 					if (deletelist == null)
-						deletelist = new ArrayList();
+						deletelist = new List<Item>();
 					deletelist.Add(item);
 				}
 				else
@@ -6352,7 +6406,7 @@ namespace Server.Mobiles
 
 			if (spawner.RecentMobileSearchList == null)
 			{
-				spawner.RecentMobileSearchList = new ArrayList();
+				spawner.RecentMobileSearchList = new List<Mobile>();
 			}
 
 			spawner.RecentMobileSearchList.Add(target);
@@ -6368,7 +6422,7 @@ namespace Server.Mobiles
 		{
 			if (spawner == null || name == null || spawner.RecentMobileSearchList == null) return null;
 
-			ArrayList deletelist = null;
+			List<Mobile> deletelist = null;
 			Mobile foundmobile = null;
 
 			Type targettype = null;
@@ -6383,7 +6437,7 @@ namespace Server.Mobiles
 				{
 					// clean it up
 					if (deletelist == null)
-						deletelist = new ArrayList();
+						deletelist = new List<Mobile>();
 					deletelist.Add(m);
 				}
 				else
@@ -6682,14 +6736,13 @@ namespace Server.Mobiles
 
 					// is it a valid item specification?
 					string baseitemtype = ParseObjectType(itemtypestr);
-
+					#region itemKeyword
 					if (IsSpecialItemKeyword(baseitemtype))
 					{
-
 						// itemtypestr will have the form keyword[,x[,y]]
 						string[] itemkeywordargs = ParseCommaArgs(itemtypestr, 3);
 
-						itemKeyword kw = (itemKeyword)itemKeywordHash[baseitemtype];
+						itemKeyword kw = itemKeywordHash[baseitemtype];
 
 						switch (kw)
 						{
@@ -7269,6 +7322,7 @@ namespace Server.Mobiles
 						}
 
 					}
+					#endregion
 					else
 					{
 						Type type = SpawnerType.GetType(ParseObjectType(itemtypestr));
@@ -7494,7 +7548,7 @@ namespace Server.Mobiles
 			if (str.IndexOf("</") >= 0 || str.IndexOf("/>") >= 0)
 			{
 				// or use indexof to do it with more context control
-				ArrayList tmparray = new ArrayList();
+				List<string> tmparray = new List<string>();
 				// find the next slash char
 				int index = 0;
 				int preindex = 0;
@@ -7608,7 +7662,7 @@ namespace Server.Mobiles
 
 			int lastindex = 0;
 			int index = 0;
-			ArrayList strargs = new ArrayList();
+			List<string> strargs = new List<string>();
 			while (index >= 0)
 			{
 				// go through the string and find the first instance of the separator
@@ -7631,7 +7685,7 @@ namespace Server.Mobiles
 			string[] args = new string[strargs.Count];
 			for (int i = 0; i < strargs.Count; i++)
 			{
-				args[i] = (string)strargs[i];
+				args[i] = strargs[i];
 			}
 
 			return args;
@@ -7961,11 +8015,10 @@ namespace Server.Mobiles
 					{
 						rangelist = refitem.GetClientsInRange(range);
 					}
-					else
-						if (refmob != null && !refmob.Deleted)
-						{
-							rangelist = refmob.GetClientsInRange(range);
-						}
+					else if (refmob != null && !refmob.Deleted)
+					{
+						rangelist = refmob.GetClientsInRange(range);
+					}
 					if (rangelist != null)
 					{
 						foreach (NetState p in rangelist)
@@ -7982,7 +8035,11 @@ namespace Server.Mobiles
 								if (musicnumber == -1)
 								{
 									MusicName music;
+#if Framework_4_0
+									if(Enum.TryParse(musicstr[1], true, out music))
+#else
 									if(TryParse(musicstr[1], true, out music))
+#endif
 										p.Send(PlayMusic.GetInstance(music));
 								}
 								else
@@ -8011,7 +8068,11 @@ namespace Server.Mobiles
 					if (musicnumber == -1)
 					{
 						MusicName music;
+#if Framework_4_0
+						if(Enum.TryParse(musicstr[1], true, out music))
+#else
 						if(TryParse(musicstr[1], true, out music))
+#endif
 							triggermob.Send(PlayMusic.GetInstance(music));
 					}
 					else
@@ -8051,10 +8112,9 @@ namespace Server.Mobiles
 			if (str.Length > 2)
 			{
 				// get the range arg
-				if (str[2] == "PETS")
-				{
+				if (str[2].ToLower() == "pets")
 					petres = true;
-				}
+				else bool.TryParse(str[2], out petres);
 			}
 
 			try
@@ -8133,7 +8193,9 @@ namespace Server.Mobiles
 			}
 			if (str.Length > 3)
 			{
-				if (str[3].ToLower() == "playeronly") playeronly = true;
+				if(str[3].ToLower() == "playeronly")
+					playeronly = true;
+				else bool.TryParse(str[3], out playeronly);
 			}
 			try
 			{
@@ -8614,17 +8676,17 @@ namespace Server.Mobiles
 			XmlSpawner spawner = invoker as XmlSpawner;
 
 			// check for any special keywords that might appear in the type such as SET, GIVE, or TAKE
-
+			#region typeKeyword
 			if (IsTypeKeyword(typeName))
 			{
-				typeKeyword kw = (typeKeyword)typeKeywordHash[typeName];
+				typeKeyword kw = typeKeywordHash[typeName];
 
 				switch (kw)
 				{
 					case typeKeyword.SET:
 						{
 							// the syntax is SET/prop/value/prop2/value...
-							// check for the SET,itemname[,itemtype]/prop/value form is used
+							// check for the SET,itemname or serialno[,itemtype]/prop/value form is used
 							string[] arglist = ParseSlashArgs(substitutedtypeName, 3);
 							string[] keywordargs = ParseString(arglist[0], 3, ",");
 
@@ -9006,7 +9068,7 @@ namespace Server.Mobiles
 							{
 								targettype = SpawnerType.GetType(typestr);
 							}
-							ArrayList nearbylist = GetNearbyObjects(invoker, targetname, targettype, typestr, range, searchcontainers, proptest);
+							List<object> nearbylist = GetNearbyObjects(invoker, targetname, targettype, typestr, range, searchcontainers, proptest);
 
 							// apply the properties to everything on the list
 							foreach (object nearbyobj in nearbylist)
@@ -9062,7 +9124,7 @@ namespace Server.Mobiles
 							}
 
 							// get all of the nearby pets
-							ArrayList nearbylist = GetNearbyObjects(triggermob, targetname, targettype, typestr, range, searchcontainers, null);
+							List<object> nearbylist = GetNearbyObjects(triggermob, targetname, targettype, typestr, range, searchcontainers, null);
 
 							// apply the properties to everything on the list
 							foreach (object nearbyobj in nearbylist)
@@ -9174,7 +9236,7 @@ namespace Server.Mobiles
 								return false;
 							}
 
-							ArrayList spawnedlist = XmlSpawner.GetSpawnedList(targetspawner, subgroup);
+							List<object> spawnedlist = XmlSpawner.GetSpawnedList(targetspawner, subgroup);
 							if (spawnedlist == null) return true;
 							foreach (object targetobj in spawnedlist)
 							{
@@ -9273,9 +9335,127 @@ namespace Server.Mobiles
 
 							break;
 						}
+					case typeKeyword.TAKEGIVE:
+						{
+							// syntax TAKEGIVE[,quantity[,true*,[type]]]/itemnametotake/GIVE/itemtypetogive *search in banca
+							string[] arglist = ParseSlashArgs(substitutedtypeName, 5);
+							string[] givelist = null;
+							string targetName;
+							string typestr = null;
+							if (arglist.Length < 4)
+							{
+								status_str = "invalid TAKEGIVE specification";
+								return false;
+							}
+							else
+							{
+								givelist = new string[arglist.Length - 2];
+								targetName = arglist[1];
+								Array.Copy(arglist, 2, givelist, 0, arglist.Length -2);
+							}
+							string[] keywordargs = ParseString(arglist[0], 4, ",");
+							string[] givekeywordargs = ParseString(givelist[0], 2, ",");
+							int quantity = 0;
+							bool banksearch = false;
+							bool success = false;
+							List<Item> toRemove = new List<Item>();
+							if (keywordargs.Length > 1)
+							{
+								if(!int.TryParse(keywordargs[1], out quantity))
+								{
+									status_str = "Invalid TAKE quantity : " + arglist[1];
+									return false;
+								}
+							}
+							if (keywordargs.Length > 2)
+							{
+								if(!bool.TryParse(keywordargs[2], out banksearch))
+								{
+									status_str = "Invalid TAKE bankflag : " + arglist[1];
+									return false;
+								}
+							}
+							if (keywordargs.Length > 3)
+							{
+								typestr = keywordargs[3];
+							}
+								// search the trigger mob for the named item
+								Item itemTarget = SearchMobileForItem(triggermob, targetName, typestr, banksearch);
+
+								// found the item so get rid of it
+								if (itemTarget != null)
+								{
+									// if a quantity was specified and the item is stackable, then try to take the quantity
+									if (quantity > 0 && itemTarget.Stackable)
+									{
+										List<Item> itemlist = SearchMobileForItems(triggermob, targetName, typestr, banksearch, false);
+										itemlist.Reverse();
+										int totaltaken = 0;
+										int totake = quantity;
+										int remaining=0;
+										int taken=0;
+
+										foreach(Item it in itemlist)
+										{
+											remaining = it.Amount - quantity;
+											if(remaining <= 0)
+											{
+												taken = it.Amount;
+												totaltaken += taken;
+
+												toRemove.Add(it);
+												quantity -= taken;
+											}
+											else
+											{
+												totaltaken += quantity;
+												it.Amount = remaining;
+												break;
+											}
+										}
+
+										if(totaltaken>=totake)
+										{
+											for(int i=toRemove.Count - 1; i>=0; --i)
+												toRemove[i].Delete();
+											success=true;
+										}
+									}
+									else//non stackable, we have to find them all
+									{
+										// dont save quest holders
+										if (itemTarget is XmlQuestBook || itemTarget is IXmlQuest || quantity<=1)
+										{
+											toRemove.Add(itemTarget);
+										}
+										else
+										{
+											List<Item> itemlist = SearchMobileForItems(triggermob, targetName, typestr, banksearch, false);
+											itemlist.Reverse();
+												
+											for(int i=itemlist.Count - 1, totake=quantity;i>=0 && totake>0;--i, --totake)
+											{
+												toRemove.Add(itemlist[i]);
+											}
+										}
+										if(toRemove.Count>=quantity)
+										{
+											for(int i=toRemove.Count - 1; i>=0; --i)
+												toRemove[i].Delete();
+											success=true;
+										}
+									}
+
+									string remainder;
+									if(success)
+										AddItemToTarget(spawner, triggermob, givekeywordargs, givelist, triggermob, invoker, false, out remainder, out status_str);
+								}
+							TheSpawn.SpawnedObjects.Add(new KeywordTag(substitutedtypeName, spawner));
+							break;
+						}
 					case typeKeyword.GIVE:
 						{
-							//syntax is GIVE/itemtypetogive
+							//syntax is GIVE[,probability (0.01=1% 1=100%)]/itemtypetogive
 							string[] arglist = ParseSlashArgs(substitutedtypeName, 3);
 
 							string remainder;
@@ -9581,7 +9761,7 @@ namespace Server.Mobiles
 							// the syntax is GUMP,title,type/string
 							// can alternatively accept a gump constructor name
 							// GUMP,title,type,constructorname/string
-							string[] arglist = ParseSlashArgs(substitutedtypeName, 3);
+							string[] arglist = ParseSlashArgs(substitutedtypeName, 2);
 							string gumpText;
 							if (arglist.Length > 1)
 							{
@@ -9828,12 +10008,12 @@ namespace Server.Mobiles
 								string[] keywordargs = ParseString(arglist[0], 3, ",");
 								if (keywordargs.Length > 1)
 								{
-									if(!double.TryParse(keywordargs[1], out delay))
+									if(!double.TryParse(keywordargs[1], NumberStyles.Any, CultureInfo.InvariantCulture, out delay))
 										status_str = "invalid delay arg to WAITUNTIL";
 								}
 								if (keywordargs.Length > 2)
 								{
-									if(!double.TryParse(keywordargs[2], out timeout))
+									if (!double.TryParse(keywordargs[2], NumberStyles.Any, CultureInfo.InvariantCulture, out timeout))
 										status_str = "invalid timeout arg to WAITUNTIL";
 								}
 							}
@@ -10459,7 +10639,6 @@ namespace Server.Mobiles
 								try
 								{
 									// deal with the 3 types of spells, mob targeted, location targeted, and self targeted
-
 									// dont go through all of the warm up stuff, get right to the casting
 									spell.State = SpellState.Sequencing;
 
@@ -10499,7 +10678,6 @@ namespace Server.Mobiles
 									}
 									else
 									{
-
 										throw (new ArgumentNullException());
 									}
 									// Get the parameters for the target method.
@@ -10667,6 +10845,8 @@ namespace Server.Mobiles
 				// indicate successful keyword spawn
 				return true;
 			}
+			#endregion
+			#region itemKeyword
 			else
 				if (IsSpecialItemKeyword(typeName))
 				{
@@ -10677,10 +10857,10 @@ namespace Server.Mobiles
 
 					// itemtypestr will have the form keyword[,x[,y]]
 					string[] itemkeywordargs = ParseString(itemtypestr, 3, ",");
+					
+					itemKeyword kw = itemKeywordHash[typeName];
 
 					// deal with the special keywords
-					itemKeyword kw = (itemKeyword)itemKeywordHash[baseitemtype];
-
 					switch (kw)
 					{
 						case itemKeyword.ARMOR:
@@ -11073,6 +11253,7 @@ namespace Server.Mobiles
 
 					return true;
 				}
+			#endregion
 				else
 				{
 					// should never get here
@@ -11101,7 +11282,7 @@ namespace Server.Mobiles
 					{
 						if ( Region.Find( item.Location, item.Map).IsPartOf(r) )
 							list.Add( item );
-					}
+	}
 				}
 			}
 
