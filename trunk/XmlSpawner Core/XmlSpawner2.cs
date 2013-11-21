@@ -1,4 +1,4 @@
-//#define TRACE
+﻿//#define TRACE
 //#define RESTRICTCONSTRUCTABLE
 
 using System;
@@ -87,6 +87,7 @@ namespace Server.Mobiles
 		private static int ShowItemId = 0x3E57;					// ships mast
 		private static int defaultTriggerSound = 0x1F4;          // click and sparkle sound by default  (0x1F4) , click sound (0x3A4)
 		public static string XmlSpawnDir = "XmlSpawner";            // default directory for saving/loading .xml files with [xmlload [xmlsave
+		public static string XmlMultiDir = "XmlMultis";
 		private static string XmlConfigsDir = "XmlSpawnerConfigs";  // default directory for loading .xml config files with LoadConfig
 		private const int MaxSmartSectorListSize = 1024;		// maximum sector list size for use in smart spawning. This gives a 512x512 tile range.
 
@@ -133,12 +134,12 @@ namespace Server.Mobiles
 		private static WarnTimer2 m_WarnTimer;
 
 		// hash table for optimizing HoldSmartSpawning method invocation
-		private static Hashtable holdSmartSpawningHash;
+		private static Dictionary<Type, PropertyInfo> holdSmartSpawningHash;
 
 		public static int seccount;
 
 		// sector hashtable for each map
-		private static Hashtable[] GlobalSectorTable = new Hashtable[6];
+		private static Dictionary<Sector, List<XmlSpawner>>[] GlobalSectorTable = new Dictionary<Sector, List<XmlSpawner>>[6];
 
 		#endregion
 
@@ -218,7 +219,7 @@ namespace Server.Mobiles
 		private string m_RegionName = string.Empty;	// 2004.02.08 :: Omega Red
 		private AccessLevel m_TriggerAccessLevel = AccessLevel.Player;
 
-		public ArrayList m_TextEntryBook;
+		public List<XmlTextEntryBook> m_TextEntryBook;
 		private XmlSpawnerGump m_SpawnerGump;
 
 		private bool m_AllowGhostTriggering = false;
@@ -231,15 +232,15 @@ namespace Server.Mobiles
 		private DateTime m_FirstModified;
 		private DateTime m_LastModified;
 
-		private ArrayList m_MovementList;
+		private List<MovementInfo> m_MovementList;
 		private MovementTimer m_MovementTimer;
-		internal ArrayList m_KeywordTagList = new ArrayList();
+		internal List<BaseXmlSpawner.KeywordTag> m_KeywordTagList = new List<BaseXmlSpawner.KeywordTag>();
 		private string m_FirstModifiedBy = null;
 		private string m_LastModifiedBy = null;
 
-		public ArrayList RecentSpawnerSearchList = null;
-		public ArrayList RecentItemSearchList = null;
-		public ArrayList RecentMobileSearchList = null;
+		public List<XmlSpawner> RecentSpawnerSearchList = null;
+		public List<Item> RecentItemSearchList = null;
+		public List<Mobile> RecentMobileSearchList = null;
 		private TimeSpan m_DespawnTime;
 
 		private string m_SkillTrigger;
@@ -256,17 +257,17 @@ namespace Server.Mobiles
 		private bool m_SmartSpawning = false;
 		private SectorTimer m_SectorTimer;
 
-		private ArrayList m_ShowBoundsItems = new ArrayList();
+		private List<Static> m_ShowBoundsItems = new List<Static>();
 
-		public ArrayList PropertyInfoList = null;   // used to optimize property info lookup used by set and get property methods.
+		public List<BaseXmlSpawner.TypeInfo> PropertyInfoList = null;   // used to optimize property info lookup used by set and get property methods.
 
-		private Hashtable spawnPositionWayTable = null;  // used to optimize #waypoint lookup
+		private Dictionary<string, List<Item>> spawnPositionWayTable = null;  // used to optimize #waypoint lookup
 
 		private bool inrespawn = false;
 
-		private ArrayList sectorList = null;
+		private List<Sector> sectorList = null;
 
-		private bool m_Debug;
+		private bool m_DisableGlobalAutoReset;
 
 		private Point3D mostRecentSpawnPosition = Point3D.Zero;
 
@@ -359,7 +360,7 @@ namespace Server.Mobiles
 			}
 		}
 
-		public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
+		public bool DisableGlobalAutoReset { get { return m_DisableGlobalAutoReset; } set { m_DisableGlobalAutoReset = value; } }
 
 		public bool DoDefrag
 		{
@@ -510,7 +511,7 @@ namespace Server.Mobiles
 				if (sectorList == null)
 				{
 					Point3D loc = this.Location;
-					sectorList = new ArrayList();
+					sectorList = new List<Sector>();
 
 					// is this container held?
 					if (Parent != null)
@@ -555,17 +556,18 @@ namespace Server.Mobiles
 
 								if (GlobalSectorTable[Map.MapID] == null)
 								{
-									GlobalSectorTable[Map.MapID] = new Hashtable();
+									GlobalSectorTable[Map.MapID] = new Dictionary<Sector, List<XmlSpawner>>();
 								}
 
 								// add this sector and the spawner associated with it to the global sector table
-								if (GlobalSectorTable[Map.MapID].Contains(s))
+								List<XmlSpawner> spawnerlist;
+								if (GlobalSectorTable[Map.MapID].TryGetValue(s, out spawnerlist))//.Contains(s))
 								{
-									ArrayList spawnerlist = (ArrayList)GlobalSectorTable[Map.MapID][s];
+									//List<XmlSpawner> spawnerlist = GlobalSectorTable[Map.MapID][s];
 									if (spawnerlist == null)
 									{
 										//GlobalSectorTable[Map.MapID].Remove(s);
-										spawnerlist = new ArrayList();
+										spawnerlist = new List<XmlSpawner>();
 										//GlobalSectorTable[Map.MapID].Add(s, spawnerlist);
 										GlobalSectorTable[Map.MapID][s] = spawnerlist;
 									}
@@ -578,11 +580,10 @@ namespace Server.Mobiles
 								}
 								else
 								{
-									ArrayList spawnerlist = new ArrayList();
+									spawnerlist = new List<XmlSpawner>();
 									spawnerlist.Add(this);
 									// add a new entry to the table
-									GlobalSectorTable[Map.MapID].Add(s, spawnerlist);
-
+									GlobalSectorTable[Map.MapID][s] = spawnerlist;
 								}
 
 								totalSectorsMonitored++;
@@ -716,7 +717,6 @@ namespace Server.Mobiles
 			set { m_OnHold = value; }
 		}
 
-
 		public string AddSpawn
 		{
 			get { return null; }
@@ -745,7 +745,6 @@ namespace Server.Mobiles
 				}
 			}
 		}
-
 
 		public Skill TriggerSkill
 		{
@@ -1124,7 +1123,7 @@ namespace Server.Mobiles
 			{
 				if ((value == true) && (ShowBounds == false))
 				{
-					if (m_ShowBoundsItems == null) m_ShowBoundsItems = new ArrayList();
+					if (m_ShowBoundsItems == null) m_ShowBoundsItems = new List<Static>();
 
 					// Boundary lines
 					int ValidX1 = m_X;
@@ -1971,7 +1970,14 @@ namespace Server.Mobiles
 					if (so.SpawnedObjects[i] == spawn)
 					{
 						so.SpawnedObjects.Remove(spawn);
-						m_killcount++;
+						if(SequentialSpawn >= 0 && so.RestrictKillsToSubgroup)
+						{
+								if (so.SubGroup == SequentialSpawn)
+									m_killcount++;
+						}
+						else
+							m_killcount++;
+
 						return;
 					}
 				}
@@ -2233,7 +2239,7 @@ namespace Server.Mobiles
 		{
 			if (m_TextEntryBook != null)
 			{
-				foreach (Item s in m_TextEntryBook)
+				foreach (XmlTextEntryBook s in m_TextEntryBook)
 					s.Delete();
 
 				m_TextEntryBook = null;
@@ -2328,9 +2334,10 @@ namespace Server.Mobiles
 			if (s == null || s.Owner == null || s.Owner == Map.Internal || GlobalSectorTable[s.Owner.MapID] == null) return;
 
 			// find the sector
-			if (GlobalSectorTable[s.Owner.MapID].Contains(s))
+			List<XmlSpawner> spawnerlist;
+			if (GlobalSectorTable[s.Owner.MapID].TryGetValue(s, out spawnerlist) && spawnerlist!=null)
 			{
-				ArrayList spawnerlist = (ArrayList)GlobalSectorTable[s.Owner.MapID][s];
+				//List<XmlSpawner> spawnerlist = GlobalSectorTable[s.Owner.MapID][s];
 				if (spawnerlist.Contains(spawner))
 				{
 					spawnerlist.Remove(spawner);
@@ -3152,7 +3159,7 @@ public static void _TraceEnd(int index)
 			// go through the list and check for redundancy
 			if (m_MovementList == null)
 			{
-				m_MovementList = new ArrayList();
+				m_MovementList = new List<MovementInfo>();
 			}
 
 			// check to see if the movement timer is running
@@ -4270,7 +4277,7 @@ public static void _TraceEnd(int index)
 		[Description("Makes all XmlSpawner objects movable and also changes the item id to a blue ships mast for easy identification.")]
 		public static void ShowSpawnPoints_OnCommand(CommandEventArgs e)
 		{
-			ArrayList ToShow = new ArrayList();
+			List<Item> ToShow = new List<Item>();
 			foreach (Item item in World.Items.Values)
 			{
 				if (item is XmlSpawner)
@@ -4290,15 +4297,13 @@ public static void _TraceEnd(int index)
 			}
 
 			// place the statics
-			foreach (Item i in ToShow)
+			foreach (XmlSpawner xml_item in ToShow)
 			{
-
-				XmlSpawner xml_item = (XmlSpawner)i;
 				// does the spawner already have a static attached to it? could happen if two showall commands are issued in a row.
 				// if so then dont add another
 				if ((xml_item.m_ShowContainerStatic == null || xml_item.m_ShowContainerStatic.Deleted) && xml_item.RootParent is Container)
 				{
-					Container root_item = xml_item.RootParent as Container;
+					Container root_item = (Container)xml_item.RootParent;
 					// calculate a world location for the static.  Position it just above the container
 					int x = root_item.Location.X;
 					int y = root_item.Location.Y;
@@ -4319,7 +4324,7 @@ public static void _TraceEnd(int index)
 		[Description("Makes all XmlSpawner objects invisible and unmovable returns the object id to the default.")]
 		public static void HideSpawnPoints_OnCommand(CommandEventArgs e)
 		{
-			ArrayList ToDelete = new ArrayList();
+			List<Item> ToDelete = new List<Item>();
 			foreach (Item item in World.Items.Values)
 			{
 				if (item is XmlSpawner)
@@ -4338,9 +4343,8 @@ public static void _TraceEnd(int index)
 					}
 				}
 			}
-			foreach (Item i in ToDelete)
+			foreach (XmlSpawner xml_item in ToDelete)
 			{
-				XmlSpawner xml_item = (XmlSpawner)i;
 				if (xml_item.m_ShowContainerStatic != null && !xml_item.m_ShowContainerStatic.Deleted)
 				{
 					xml_item.m_ShowContainerStatic.Delete();
@@ -4557,9 +4561,7 @@ public static void _TraceEnd(int index)
 
 						string typestr = so.TypeName;
 
-						Type type = null;
-						if(!string.IsNullOrEmpty(typestr))
-							SpawnerType.GetType(typestr);
+						Type type = SpawnerType.GetType(typestr);
 
 						// if it has basevendors on it or invalid types, then skip it
 						if (typestr == null || (type != null && (type == typeof(BaseVendor) || type.IsSubclassOf(typeof(BaseVendor)))) ||
@@ -5606,7 +5608,7 @@ public static void _TraceEnd(int index)
 			bool group = bool.Parse(GetText(node["group"], "False"));
 			TimeSpan maxDelay = TimeSpan.Parse(GetText(node["maxdelay"], "10:00"));
 			TimeSpan minDelay = TimeSpan.Parse(GetText(node["mindelay"], "05:00"));
-			ArrayList creaturesName = LoadCreaturesName(node["creaturesname"]);
+			List<string> creaturesName = LoadCreaturesName(node["creaturesname"]);
 			string name = GetText(node["name"], "Spawner");
 			Point3D location = Point3D.Parse(GetText(node["location"], "Error"));
 			Map map = Map.Parse(GetText(node["map"], "Error"));
@@ -5619,9 +5621,9 @@ public static void _TraceEnd(int index)
 
 			for (int i = 0; i < creaturesName.Count; i++)
 			{
-				so[i] = new SpawnObject((string)creaturesName[i], count);
+				so[i] = new SpawnObject(creaturesName[i], count);
 				// check the type to see if there are vendors on it
-				Type type = SpawnerType.GetType((string)creaturesName[i]);
+				Type type = SpawnerType.GetType(creaturesName[i]);
 
 				// if it has basevendors on it or invalid types, then skip it
 				if (type != null && (type == typeof(BaseVendor) || type.IsSubclassOf(typeof(BaseVendor))))
@@ -5662,9 +5664,9 @@ public static void _TraceEnd(int index)
 			}
 		}
 
-		private static ArrayList LoadCreaturesName(XmlElement node)
+		private static List<string> LoadCreaturesName(XmlElement node)
 		{
-			ArrayList names = new ArrayList();
+			List<string> names = new List<string>();
 
 			if (node != null)
 			{
@@ -6249,7 +6251,7 @@ public static void _TraceEnd(int index)
 									catch { }
 									OtherCount++;
 								}
-							}
+								}
 
 							// test to see whether the distance between the relative center point and the spawner is too great.  If so then dont do relative
 							if (relativex == -1 && relativey == -1)
@@ -6892,6 +6894,28 @@ public static void _TraceEnd(int index)
 			return dirname;
 		}
 
+		public static string LocateMultiFile(string filename)
+		{
+			bool found = false;
+
+			string dirname = null;
+
+			if (System.IO.Directory.Exists(XmlMultiDir) == true)
+			{
+				// get it from the defaults directory if it exists
+				dirname = String.Format("{0}/{1}", XmlMultiDir, filename);
+				found = System.IO.File.Exists(dirname) || System.IO.Directory.Exists(dirname);
+			}
+
+			if (!found)
+			{
+				// otherwise just get it from the main installation dir
+				dirname = filename;
+			}
+
+			return dirname;
+		}
+
 		[Usage("XmlNewLoad <SpawnFile or directory> [SpawnerPrefixFilter]")]
 		[Description("Loads new XmlSpawner objects with new GUIDs (no replacement) into the current map of the player.")]
 		public static void NewLoad_OnCommand(CommandEventArgs e)
@@ -7128,7 +7152,7 @@ public static void _TraceEnd(int index)
 
 			m.SendMessage("Saving object in folder {0} - file {1} - spawner {2}.", dirname, filename, xmlspawner);
 			
-			ArrayList saveslist = new ArrayList(1);
+			List<XmlSpawner> saveslist = new List<XmlSpawner>(1);
 			saveslist.Add(xmlspawner);
 			SaveSpawnList(m, saveslist, dirname, false, true);
 		}
@@ -7148,7 +7172,6 @@ public static void _TraceEnd(int index)
 				e.Mobile.SendMessage("Usage:  {0} <SpawnFile> [SpawnerPrefixFilter]", e.Command);
 				return;
 			}
-
 
 			// Spawner save criteria (if any)
 			string SpawnerPrefix = string.Empty;
@@ -7179,7 +7202,7 @@ public static void _TraceEnd(int index)
 					((SpawnerPrefix != null && SpawnerPrefix.Length > 0) ? " beginning with " + SpawnerPrefix : string.Empty), dirname));
 
 
-			ArrayList saveslist = new ArrayList();
+			List<XmlSpawner> saveslist = new List<XmlSpawner>();
 
 			// Add each spawn point to the list
 			foreach (Item i in World.Items.Values)
@@ -7189,7 +7212,7 @@ public static void _TraceEnd(int index)
 					&& !(i.RootParent is Mobile)
 					&& (SpawnerPrefix == null || (SpawnerPrefix.Length == 0) || (i.Name != null && i.Name.StartsWith(SpawnerPrefix))))
 				{
-					saveslist.Add(i);
+					saveslist.Add((XmlSpawner)i);
 				}
 			}
 
@@ -7197,12 +7220,12 @@ public static void _TraceEnd(int index)
 			SaveSpawnList(e.Mobile, saveslist, dirname, oldformat, true);
 		}
 
-		public static bool SaveSpawnList(ArrayList savelist, Stream stream)
+		public static bool SaveSpawnList(List<XmlSpawner> savelist, Stream stream)
 		{
 			return SaveSpawnList(null, savelist, null, stream, false, false);
 		}
 
-		public static bool SaveSpawnList(Mobile from, ArrayList savelist, string dirname, bool oldformat, bool verbose)
+		public static bool SaveSpawnList(Mobile from, List<XmlSpawner> savelist, string dirname, bool oldformat, bool verbose)
 		{
 			if (dirname == null || dirname.Length == 0) return false;
 
@@ -7237,7 +7260,7 @@ public static void _TraceEnd(int index)
 		}
 
 
-		public static bool SaveSpawnList(Mobile from, ArrayList savelist, string dirname, Stream stream, bool oldformat, bool verbose)
+		public static bool SaveSpawnList(Mobile from, List<XmlSpawner> savelist, string dirname, Stream stream, bool oldformat, bool verbose)
 		{
 			if (savelist == null || stream == null) return false;
 
@@ -7541,7 +7564,7 @@ public static void _TraceEnd(int index)
 
 				// Delete Xml spawner's in the world based on the mobiles current map
 				int Count = 0;
-				ArrayList ToDelete = new ArrayList();
+				List<Item> ToDelete = new List<Item>();
 				foreach (Item i in World.Items.Values)
 				{
 					if ((i is XmlSpawner) && (WipeAll == true || i.Map == e.Mobile.Map) && (i.Deleted == false))
@@ -7606,7 +7629,7 @@ public static void _TraceEnd(int index)
 
 				// Respawn Xml spawner's in the world based on the mobiles current map
 				int Count = 0;
-				ArrayList ToRespawn = new ArrayList();
+				List<Item> ToRespawn = new List<Item>();
 				foreach (Item i in World.Items.Values)
 				{
 					try
@@ -7922,19 +7945,18 @@ public static void _TraceEnd(int index)
 
 		public void Defrag(bool killtest)
 		{
-
 			if (m_SpawnObjects == null) return;
 
 			bool removed = false;
 			int total_removed = 0;
 
-			ArrayList deletelist = new ArrayList();
+			List<Item> deleteilist = new List<Item>();
+			List<Mobile> deletemlist = new List<Mobile>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				for (int x = 0; x < so.SpawnedObjects.Count; x++)
 				{
 					object o = so.SpawnedObjects[x];
-
 
 					if (o is Item)
 					{
@@ -7945,7 +7967,7 @@ public static void _TraceEnd(int index)
 							&& (!ItemFlags.GetTaken(item) || (item.Parent != null && (item.Parent == this.Parent)))) // can despawn if just moved within the same container
 						{
 							//item.Delete();
-							deletelist.Add(item);
+							deleteilist.Add(item);
 							despawned = true;
 						}
 
@@ -8002,7 +8024,7 @@ public static void _TraceEnd(int index)
 							&& m.Map != null && m.Map != Map.Internal && !m.Map.GetSector(m.Location).Active)
 						{
 							//m.Delete();
-							deletelist.Add(m);
+							deletemlist.Add(m);
 							despawned = true;
 						}
 
@@ -8072,7 +8094,7 @@ public static void _TraceEnd(int index)
 				}
 			}
 
-			DeleteFromList(deletelist);
+			DeleteFromList(deleteilist, deletemlist);
 
 			// Check if anything has been removed
 			if (removed == true)
@@ -8088,7 +8110,7 @@ public static void _TraceEnd(int index)
 		{
 			if (m_SpawnObjects == null) return;
 
-			ArrayList ToDelete = new ArrayList();
+			List<BaseXmlSpawner.KeywordTag> ToDelete = new List<BaseXmlSpawner.KeywordTag>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				for (int x = 0; x < so.SpawnedObjects.Count; x++)
@@ -8109,8 +8131,9 @@ public static void _TraceEnd(int index)
 				}
 			}
 
-			foreach (BaseXmlSpawner.KeywordTag i in ToDelete)
+			for(int x=ToDelete.Count - 1; x>=0; --x)//BaseXmlSpawner.KeywordTag i in ToDelete)
 			{
+				BaseXmlSpawner.KeywordTag i = ToDelete[x];
 				if (i != null && !i.Deleted)
 				{
 					i.Delete();
@@ -8123,7 +8146,7 @@ public static void _TraceEnd(int index)
 		{
 			if (m_SpawnObjects == null) return;
 			bool removed = false;
-			ArrayList ToDelete = new ArrayList();
+			List<BaseXmlSpawner.KeywordTag> ToDelete = new List<BaseXmlSpawner.KeywordTag>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				for (int x = 0; x < so.SpawnedObjects.Count; x++)
@@ -8145,8 +8168,9 @@ public static void _TraceEnd(int index)
 				}
 			}
 
-			foreach (BaseXmlSpawner.KeywordTag i in ToDelete)
+			for(int x=ToDelete.Count - 1; x>=0; --x)//each (BaseXmlSpawner.KeywordTag i in ToDelete)
 			{
+				BaseXmlSpawner.KeywordTag i = ToDelete[x];
 				if (i != null && !i.Deleted)
 				{
 					i.Delete();
@@ -8165,7 +8189,7 @@ public static void _TraceEnd(int index)
 		{
 			if (m_SpawnObjects == null) return;
 			bool removed = false;
-			ArrayList ToDelete = new ArrayList();
+			List<BaseXmlSpawner.KeywordTag> ToDelete = new List<BaseXmlSpawner.KeywordTag>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				for (int x = 0; x < so.SpawnedObjects.Count; x++)
@@ -8187,8 +8211,9 @@ public static void _TraceEnd(int index)
 				}
 			}
 
-			foreach (BaseXmlSpawner.KeywordTag i in ToDelete)
+			for(int x=ToDelete.Count - 1; x>=0; --x)//BaseXmlSpawner.KeywordTag i in ToDelete)
 			{
+				BaseXmlSpawner.KeywordTag i = ToDelete[x];
 				if (i != null && !i.Deleted)
 				{
 					i.Delete();
@@ -8204,7 +8229,7 @@ public static void _TraceEnd(int index)
 		{
 			if (m_SpawnObjects == null) return;
 			bool removed = false;
-			ArrayList ToDelete = new ArrayList();
+			List<BaseXmlSpawner.KeywordTag> ToDelete = new List<BaseXmlSpawner.KeywordTag>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				for (int x = 0; x < so.SpawnedObjects.Count; x++)
@@ -8226,8 +8251,9 @@ public static void _TraceEnd(int index)
 				}
 			}
 
-			foreach (BaseXmlSpawner.KeywordTag i in ToDelete)
+			for(int x=ToDelete.Count - 1; x>=0; --x)//BaseXmlSpawner.KeywordTag i in ToDelete)
 			{
+				BaseXmlSpawner.KeywordTag i = ToDelete[x];
 				if (i != null && !i.Deleted)
 				{
 					i.Delete();
@@ -8658,7 +8684,7 @@ public static void _TraceEnd(int index)
 			// note, tags only last a single ontick except for WAIT type
 			ClearTags(false);
 
-			if (startcount == m_killcount && !m_refractActivated && !m_skipped)
+			if (!m_DisableGlobalAutoReset && startcount == m_killcount && !m_refractActivated && !m_skipped)
 			{
 				m_spawncheck--;
 			}
@@ -9186,11 +9212,7 @@ public static void _TraceEnd(int index)
 				{
 
 					// its a regular type descriptor so find out what it is
-                    Type type = null;
-                    if (typeName != null)
-                    {
-                        type = SpawnerType.GetType(typeName);
-                    }
+					Type type = SpawnerType.GetType(typeName);
 
 					// dont try to spawn invalid types, or Mobile type spawns in containers
 					if (type != null && !(this.Parent != null && (type == typeof(Mobile) || type.IsSubclassOf(typeof(Mobile)))))
@@ -9483,7 +9505,6 @@ public static void _TraceEnd(int index)
 
 		public void Start()
 		{
-
 			if (m_Running == false)
 			{
 				if (m_SpawnObjects != null && m_SpawnObjects.Count > 0)
@@ -9580,7 +9601,6 @@ public static void _TraceEnd(int index)
 		// used to optimize smartspawning use of hasholdsmartspawning
 		public void SmartRespawn()
 		{
-
 			inrespawn = true;
 			IsInactivated = false;
 
@@ -9682,9 +9702,9 @@ public static void _TraceEnd(int index)
 			return null;
 		}
 
-		public static ArrayList GetSpawnedList(XmlSpawner spawner, int sgroup)
+		public static List<object> GetSpawnedList(XmlSpawner spawner, int sgroup)
 		{
-			ArrayList newlist = new ArrayList();
+			List<object> newlist = new List<object>();
 
 			if (spawner == null || spawner.m_SpawnObjects == null) return (null);
 			for (int i = 0; i < spawner.m_SpawnObjects.Count; i++)
@@ -9905,13 +9925,12 @@ public static void _TraceEnd(int index)
 			// try looking this up in the lookup table
 			if (holdSmartSpawningHash == null)
 			{
-				holdSmartSpawningHash = new Hashtable();
+				holdSmartSpawningHash = new Dictionary<Type, PropertyInfo>();
 			}
 			PropertyInfo prop = null;
 
-			if (!holdSmartSpawningHash.Contains(o.GetType()))
+			if (!holdSmartSpawningHash.TryGetValue(o.GetType(), out prop))
 			{
-
 				prop = o.GetType().GetProperty("HoldSmartSpawning");
 				// check to make sure the HoldSmartSpawning property for this object has the right type
 				if (prop != null && (!prop.CanRead || prop.PropertyType != typeof(bool)))
@@ -9919,13 +9938,13 @@ public static void _TraceEnd(int index)
 					prop = null;
 				}
 
-				holdSmartSpawningHash.Add(o.GetType(), prop);
+				holdSmartSpawningHash[o.GetType()]=prop;
 			}
-			else
-			{
+			//else
+			//{
 				// look it up in the hash table
-				prop = (PropertyInfo)holdSmartSpawningHash[o.GetType()];
-			}
+				//prop = holdSmartSpawningHash[o.GetType()];
+			//}
 
 			if (prop != null)
 			{
@@ -10388,7 +10407,7 @@ public static void _TraceEnd(int index)
 			int fillinc = 1;
 			int positionrange = 0;
 			string prefix = null;
-			ArrayList WayList = null;
+			List<Item> WayList = null;
 			int xinc = 0;
 			int yinc = 0;
 			int zinc = 0;
@@ -10566,27 +10585,27 @@ public static void _TraceEnd(int index)
 								// see if there is an existing hashtable for the waypoint lists
 								if (spawnPositionWayTable == null)
 								{
-									spawnPositionWayTable = new Hashtable();
+									spawnPositionWayTable = new Dictionary<string, List<Item>>();
 								}
 
 								// try to find the waypoint list in the local table
-								WayList = (ArrayList)spawnPositionWayTable[prefix];
+								//WayList = spawnPositionWayTable[prefix];
 
 								// no existing list so create a new one
-								if (WayList == null)
+								if (!spawnPositionWayTable.TryGetValue(prefix, out WayList) || WayList == null)
 								{
-									WayList = new ArrayList();
+									WayList = new List<Item>();
 
 									foreach (Item i in World.Items.Values)
 									{
-										if (i is WayPoint && i.Name != null && i.Map == Map && i.Name.StartsWith(prefix))
+										if (i is WayPoint && !string.IsNullOrEmpty(i.Name) && i.Map == Map && i.Name == prefix)
 										{
 											// add it to the list of items
 											WayList.Add(i);
 										}
 									}
 									// add the new list to the local table
-									spawnPositionWayTable.Add(prefix, WayList);
+									spawnPositionWayTable[prefix] = WayList;
 								}
 							}
 							break;
@@ -10823,7 +10842,7 @@ public static void _TraceEnd(int index)
 								if (WayList != null && WayList.Count > 0)
 								{
 									int index = Utility.Random(WayList.Count);
-									Item waypoint = (Item)WayList[index];
+									Item waypoint = WayList[index];
 									if (waypoint != null)
 									{
 										x = waypoint.Location.X;
@@ -10902,7 +10921,7 @@ public static void _TraceEnd(int index)
 			return m_SpawnObjects[index].MaxCount;
 		}
 
-		private void DeleteFromList(ArrayList list)
+		private void DeleteFromList(List<object> list)
 		{
 			if (list == null) return;
 
@@ -10915,6 +10934,20 @@ public static void _TraceEnd(int index)
 			}
 		}
 
+		private void DeleteFromList(List<Item> listi, List<Mobile> listm)
+		{
+			if (listi != null)
+			{
+				for(int i=listi.Count - 1; i>=0; --i)
+					listi[i].Delete();
+			}
+			if(listm != null)
+			{
+				for(int i=listm.Count - 1; i>=0; --i)
+					listm[i].Delete();
+			}
+		}
+
 		public void RemoveSpawnObjects()
 		{
 			if (m_SpawnObjects == null) return;
@@ -10922,7 +10955,7 @@ public static void _TraceEnd(int index)
 			Defrag(false);
 
 			ClearTags(true);
-			ArrayList deletelist = new ArrayList();
+			List<object> deletelist = new List<object>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				for (int i = 0; i < so.SpawnedObjects.Count; ++i)
@@ -10947,7 +10980,7 @@ public static void _TraceEnd(int index)
 
 			Defrag(false);
 
-			ArrayList deletelist = new ArrayList();
+			List<object> deletelist = new List<object>();
 
 			for (int i = 0; i < so.SpawnedObjects.Count; ++i)
 			{
@@ -10970,7 +11003,7 @@ public static void _TraceEnd(int index)
 			Defrag(false);
 
 			ClearTags(true);
-			ArrayList deletelist = new ArrayList();
+			List<object> deletelist = new List<object>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				if (so.SubGroup != subgroup || !so.ClearOnAdvance) continue;
@@ -10999,7 +11032,7 @@ public static void _TraceEnd(int index)
 			Defrag(false);
 
 			ClearTags(true);
-			ArrayList deletelist = new ArrayList();
+			List<object> deletelist = new List<object>();
 			foreach (SpawnObject so in m_SpawnObjects)
 			{
 				for (int i = 0; i < so.SpawnedObjects.Count; ++i)
@@ -11105,7 +11138,7 @@ public static void _TraceEnd(int index)
 
 					}
 
-					ArrayList deletelist = new ArrayList();
+					List<object> deletelist = new List<object>();
 
 					// Remove any spawns over the count
 					while (TheSpawn.SpawnedObjects != null && TheSpawn.SpawnedObjects.Count > 0 && TheSpawn.SpawnedObjects.Count > TheSpawn.MaxCount)
@@ -11188,7 +11221,7 @@ public static void _TraceEnd(int index)
 
 				// if both requireconstructable and requireattachable are true, then allow either condition
 #if(RESTRICTCONSTRUCTABLE)
-			   if (!(requireconstructable && Add.IsConstructable(ctor,ConstructableAccessLevel)) && !(requireattachable && XmlAttach.IsAttachable(ctor)))
+			   if (!(requireconstructable && Add.IsConstructable(ctor,requester)) && !(requireattachable && XmlAttach.IsAttachable(ctor, requester)))
 					continue;
 #else
 				if (!(requireconstructable && IsConstructable(ctor)) && !(requireattachable && XmlAttach.IsAttachable(ctor)))
@@ -11285,8 +11318,8 @@ public static void _TraceEnd(int index)
 								if (s != null && GlobalSectorTable[m.Map.MapID] != null)
 								{
 
-									ArrayList spawnerlist = (ArrayList)GlobalSectorTable[m.Map.MapID][s];
-									if (spawnerlist != null)
+									List<XmlSpawner> spawnerlist;// = GlobalSectorTable[m.Map.MapID][s];
+									if (GlobalSectorTable[m.Map.MapID].TryGetValue(s, out spawnerlist) && spawnerlist != null)
 									{
 										foreach (XmlSpawner spawner in spawnerlist)
 										{
@@ -11358,7 +11391,7 @@ public static void _TraceEnd(int index)
 
 		private class WarnTimer2 : Timer
 		{
-			private ArrayList m_List;
+			private List<XmlSpawner.WarnTimer2.WarnEntry2> m_List;
 
 			private class WarnEntry2
 			{
@@ -11377,7 +11410,7 @@ public static void _TraceEnd(int index)
 			public WarnTimer2()
 				: base(TimeSpan.FromSeconds(1.0))
 			{
-				m_List = new ArrayList();
+				m_List = new List<XmlSpawner.WarnTimer2.WarnEntry2>();
 				Start();
 			}
 
@@ -11414,7 +11447,6 @@ public static void _TraceEnd(int index)
 		{
 			if (!m_Running)
 				return;
-
 
 			int minSeconds = (int)m_MinDelay.TotalSeconds;
 			int maxSeconds = (int)m_MaxDelay.TotalSeconds;
@@ -11548,7 +11580,9 @@ public static void _TraceEnd(int index)
 		{
 			base.Serialize(writer);
 
-			writer.Write((int)30); // version
+			writer.Write((int)31); // version
+			// version 31
+			writer.Write(m_DisableGlobalAutoReset);
 			// Version 30
 			writer.Write(m_AllowNPCTriggering);
 
@@ -11620,7 +11654,7 @@ public static void _TraceEnd(int index)
 			if (m_ShowBoundsItems != null && m_ShowBoundsItems.Count > 0)
 			{
 				writer.Write(true);
-				writer.WriteItemList(m_ShowBoundsItems);
+				writer.WriteItemList<Static>(m_ShowBoundsItems);
 			}
 			else
 			{
@@ -11658,16 +11692,16 @@ public static void _TraceEnd(int index)
 			for (int i = 0; i < m_KeywordTagList.Count; i++)
 			{
 				// only save WAIT type keywords or other keywords that have the save flag set
-				if ((((BaseXmlSpawner.KeywordTag)(m_KeywordTagList[i])).Flags & BaseXmlSpawner.KeywordFlags.Serialize) != 0)
+				if ((m_KeywordTagList[i].Flags & BaseXmlSpawner.KeywordFlags.Serialize) != 0)
 					tagcount++;
 			}
 			writer.Write(tagcount);
 			// and write them out
 			for (int i = 0; i < m_KeywordTagList.Count; i++)
 			{
-				if ((((BaseXmlSpawner.KeywordTag)(m_KeywordTagList[i])).Flags & BaseXmlSpawner.KeywordFlags.Serialize) != 0)
+				if ((m_KeywordTagList[i].Flags & BaseXmlSpawner.KeywordFlags.Serialize) != 0)
 				{
-					((BaseXmlSpawner.KeywordTag)(m_KeywordTagList[i])).Serialize(writer);
+					m_KeywordTagList[i].Serialize(writer);
 				}
 			}
 			// Version 18
@@ -11826,22 +11860,27 @@ public static void _TraceEnd(int index)
 			bool haveproximityrange = false;
 			bool hasnewobjectinfo = false;
 			int tmpSpawnListSize = 0;
-			ArrayList tmpSubGroup = null;
-			ArrayList tmpSequentialResetTime = null;
-			ArrayList tmpSequentialResetTo = null;
-			ArrayList tmpKillsNeeded = null;
-			ArrayList tmpRequireSurface = null;
-			ArrayList tmpRestrictKillsToSubgroup = null;
-			ArrayList tmpClearOnAdvance = null;
-			ArrayList tmpMinDelay = null;
-			ArrayList tmpMaxDelay = null;
-			ArrayList tmpNextSpawn = null;
-			ArrayList tmpDisableSpawn = null;
-			ArrayList tmpPackRange = null;
-			ArrayList tmpSpawnsPer = null;
+			List<int> tmpSubGroup = null;
+			List<double> tmpSequentialResetTime = null;
+			List<int> tmpSequentialResetTo = null;
+			List<int> tmpKillsNeeded = null;
+			List<bool> tmpRequireSurface = null;
+			List<bool> tmpRestrictKillsToSubgroup = null;
+			List<bool> tmpClearOnAdvance = null;
+			List<double> tmpMinDelay = null;
+			List<double> tmpMaxDelay = null;
+			List<DateTime> tmpNextSpawn = null;
+			List<bool> tmpDisableSpawn = null;
+			List<int> tmpPackRange = null;
+			List<int> tmpSpawnsPer = null;
 
 			switch (version)
 			{
+				case 31:
+					{
+						m_DisableGlobalAutoReset = reader.ReadBool();
+						goto case 30;
+					}
 				case 30:
 					{
 						m_AllowNPCTriggering = reader.ReadBool();
@@ -11850,7 +11889,7 @@ public static void _TraceEnd(int index)
 				case 29:
 					{
 						tmpSpawnListSize = reader.ReadInt();
-						tmpSpawnsPer = new ArrayList(tmpSpawnListSize);
+						tmpSpawnsPer = new List<int>(tmpSpawnListSize);
 						for (int i = 0; i < tmpSpawnListSize; ++i)
 						{
 							int spawnsper = reader.ReadInt();
@@ -11865,7 +11904,7 @@ public static void _TraceEnd(int index)
 						if (version < 29)
 							tmpSpawnListSize = reader.ReadInt();
 
-						tmpPackRange = new ArrayList(tmpSpawnListSize);
+						tmpPackRange = new List<int>(tmpSpawnListSize);
 						for (int i = 0; i < tmpSpawnListSize; ++i)
 						{
 							int packrange = reader.ReadInt();
@@ -11880,7 +11919,7 @@ public static void _TraceEnd(int index)
 						if (version < 28)
 							tmpSpawnListSize = reader.ReadInt();
 
-						tmpDisableSpawn = new ArrayList(tmpSpawnListSize);
+						tmpDisableSpawn = new List<bool>(tmpSpawnListSize);
 						for (int i = 0; i < tmpSpawnListSize; ++i)
 						{
 							bool disablespawn = reader.ReadBool();
@@ -11905,11 +11944,11 @@ public static void _TraceEnd(int index)
 					{
 						if (version < 27)
 							tmpSpawnListSize = reader.ReadInt();
-						tmpRestrictKillsToSubgroup = new ArrayList(tmpSpawnListSize);
-						tmpClearOnAdvance = new ArrayList(tmpSpawnListSize);
-						tmpMinDelay = new ArrayList(tmpSpawnListSize);
-						tmpMaxDelay = new ArrayList(tmpSpawnListSize);
-						tmpNextSpawn = new ArrayList(tmpSpawnListSize);
+						tmpRestrictKillsToSubgroup = new List<bool>(tmpSpawnListSize);
+						tmpClearOnAdvance = new List<bool>(tmpSpawnListSize);
+						tmpMinDelay = new List<double>(tmpSpawnListSize);
+						tmpMaxDelay = new List<double>(tmpSpawnListSize);
+						tmpNextSpawn = new List<DateTime>(tmpSpawnListSize);
 						for (int i = 0; i < tmpSpawnListSize; ++i)
 						{
 							bool restrictkills = reader.ReadBool();
@@ -11929,7 +11968,7 @@ public static void _TraceEnd(int index)
 
 						if (hasitems)
 						{
-							m_ShowBoundsItems = reader.ReadItemList();
+							m_ShowBoundsItems = reader.ReadStrongItemList<Static>();
 						}
 						goto case 23;
 					}
@@ -11957,7 +11996,7 @@ public static void _TraceEnd(int index)
 					{
 						if (version < 24)
 							tmpSpawnListSize = reader.ReadInt();
-						tmpRequireSurface = new ArrayList(tmpSpawnListSize);
+						tmpRequireSurface = new List<bool>(tmpSpawnListSize);
 						for (int i = 0; i < tmpSpawnListSize; ++i)
 						{
 							bool requiresurface = reader.ReadBool();
@@ -11974,7 +12013,7 @@ public static void _TraceEnd(int index)
 						m_LastModifiedBy = reader.ReadString();
 						// deserialize the keyword tag list
 						int tagcount = reader.ReadInt();
-						m_KeywordTagList = new ArrayList(tagcount);
+						m_KeywordTagList = new List<BaseXmlSpawner.KeywordTag>(tagcount);
 						for (int i = 0; i < tagcount; i++)
 						{
 							BaseXmlSpawner.KeywordTag tag = new BaseXmlSpawner.KeywordTag(null, this);
@@ -12006,10 +12045,10 @@ public static void _TraceEnd(int index)
 						{
 							tmpSpawnListSize = reader.ReadInt();
 						}
-						tmpSubGroup = new ArrayList(tmpSpawnListSize);
-						tmpSequentialResetTime = new ArrayList(tmpSpawnListSize);
-						tmpSequentialResetTo = new ArrayList(tmpSpawnListSize);
-						tmpKillsNeeded = new ArrayList(tmpSpawnListSize);
+						tmpSubGroup = new List<int>(tmpSpawnListSize);
+						tmpSequentialResetTime = new List<double>(tmpSpawnListSize);
+						tmpSequentialResetTo = new List<int>(tmpSpawnListSize);
+						tmpKillsNeeded = new List<int>(tmpSpawnListSize);
 						for (int i = 0; i < tmpSpawnListSize; ++i)
 						{
 							int subgroup = reader.ReadInt();
@@ -12184,6 +12223,37 @@ public static void _TraceEnd(int index)
 							string typeName = BaseXmlSpawner.ParseObjectType(TypeName);
 							// does it have a substitution that might change its validity?
 							// if so then let it go
+							/*if(typeName!=null && typeName.StartsWith("#WAYPOINT"))
+							{
+								string[] args = BaseXmlSpawner.ParseSemicolonArgs(substitutedtypeName, 2);
+								string[] keyvalueargs = BaseXmlSpawner.ParseCommaArgs(args[0], 10);
+								SpawnPositionInfo spawnpositioning = new SpawnPositionInfo(SpawnPositionType.Waypoint, null, keyvalueargs);
+								if (spawnPositionWayTable == null)
+								{
+									spawnPositionWayTable = new Dictionary<string, List<Item>>();
+								}
+
+								// try to find the waypoint list in the local table
+								//WayList = spawnPositionWayTable[prefix];
+								List<Item> WayList;
+
+								// no existing list so create a new one
+								if (!spawnPositionWayTable.TryGetValue(prefix, out WayList) || WayList == null)
+								{
+									WayList = new List<Item>();
+
+									foreach (Item i in World.Items.Values)
+									{
+										if (i is WayPoint && i.Name != null && i.Map == Map && i.Name.StartsWith(prefix))
+										{
+											// add it to the list of items
+											WayList.Add(i);
+										}
+									}
+									// add the new list to the local table
+									spawnPositionWayTable[prefix] = WayList;
+								}
+							}*/
 
 							if (typeName == null || ((SpawnerType.GetType(typeName) == null) &&
 								(!BaseXmlSpawner.IsTypeOrItemKeyword(typeName) && typeName.IndexOf('{') == -1 && !typeName.StartsWith("*") && !typeName.StartsWith("#"))))
@@ -12199,7 +12269,7 @@ public static void _TraceEnd(int index)
 							// Read in the number of spawns already
 							int SpawnedCount = reader.ReadInt();
 
-							TheSpawnObject.SpawnedObjects = new ArrayList(SpawnedCount);
+							TheSpawnObject.SpawnedObjects = new List<object>(SpawnedCount);
 
 							for (int x = 0; x < SpawnedCount; ++x)
 							{
@@ -12232,12 +12302,12 @@ public static void _TraceEnd(int index)
 							{
 								SpawnObject so = m_SpawnObjects[i];
 
-								so.SubGroup = (int)tmpSubGroup[i];
-								so.SequentialResetTime = (double)tmpSequentialResetTime[i];
-								so.SequentialResetTo = (int)tmpSequentialResetTo[i];
-								so.KillsNeeded = (int)tmpKillsNeeded[i];
+								so.SubGroup = tmpSubGroup[i];
+								so.SequentialResetTime = tmpSequentialResetTime[i];
+								so.SequentialResetTo = tmpSequentialResetTo[i];
+								so.KillsNeeded = tmpKillsNeeded[i];
 								if (version > 19)
-									so.RequireSurface = (bool)tmpRequireSurface[i];
+									so.RequireSurface = tmpRequireSurface[i];
 								bool restrictkills = false;
 								bool clearadvance = true;
 								double mind = -1;
@@ -12245,11 +12315,11 @@ public static void _TraceEnd(int index)
 								DateTime nextspawn = DateTime.MinValue;
 								if (version > 23)
 								{
-									restrictkills = (bool)tmpRestrictKillsToSubgroup[i];
-									clearadvance = (bool)tmpClearOnAdvance[i];
-									mind = (double)tmpMinDelay[i];
-									maxd = (double)tmpMaxDelay[i];
-									nextspawn = (DateTime)tmpNextSpawn[i];
+									restrictkills = tmpRestrictKillsToSubgroup[i];
+									clearadvance = tmpClearOnAdvance[i];
+									mind = tmpMinDelay[i];
+									maxd = tmpMaxDelay[i];
+									nextspawn = tmpNextSpawn[i];
 								}
 								so.RestrictKillsToSubgroup = restrictkills;
 								so.ClearOnAdvance = clearadvance;
@@ -12260,21 +12330,21 @@ public static void _TraceEnd(int index)
 								bool disablespawn = false;
 								if (version > 26)
 								{
-									disablespawn = (bool)tmpDisableSpawn[i];
+									disablespawn = tmpDisableSpawn[i];
 								}
 								so.Disabled = disablespawn;
 
 								int packrange = -1;
 								if (version > 27)
 								{
-									packrange = (int)tmpPackRange[i];
+									packrange = tmpPackRange[i];
 								}
 								so.PackRange = packrange;
 
 								int spawnsper = 1;
 								if (version > 28)
 								{
-									spawnsper = (int)tmpSpawnsPer[i];
+									spawnsper = tmpSpawnsPer[i];
 								}
 								so.SpawnsPerTick = spawnsper;
 
@@ -12345,7 +12415,7 @@ public static void _TraceEnd(int index)
 			public bool Available;
 
 
-			public ArrayList SpawnedObjects;
+			public List<object> SpawnedObjects;
 			public string[] PropertyArgs;
 			public double SequentialResetTime;
 			public int EntryOrder;  // used for sorting
@@ -12423,7 +12493,7 @@ public static void _TraceEnd(int index)
 				KillsNeeded = 0;
 				RestrictKillsToSubgroup = false;
 				ClearOnAdvance = true;
-				SpawnedObjects = new ArrayList();
+				SpawnedObjects = new List<object>();
 			}
 
 			public SpawnObject(string name, int maxamount)
@@ -12436,7 +12506,7 @@ public static void _TraceEnd(int index)
 				KillsNeeded = 0;
 				RestrictKillsToSubgroup = false;
 				ClearOnAdvance = true;
-				SpawnedObjects = new ArrayList();
+				SpawnedObjects = new List<object>();
 			}
 
 			public SpawnObject(string name, int maxamount, int subgroup, double sequentialresettime, int sequentialresetto, int killsneeded,
@@ -12454,7 +12524,7 @@ public static void _TraceEnd(int index)
 				MaxDelay = maxdelay;
 				SpawnsPerTick = spawnsper;
 				PackRange = packrange;
-				SpawnedObjects = new ArrayList();
+				SpawnedObjects = new List<object>();
 			}
 
 			internal static string GetParm(string str, string separator)
@@ -12480,7 +12550,7 @@ public static void _TraceEnd(int index)
 			internal static SpawnObject[] LoadSpawnObjectsFromString(string ObjectList)
 			{
 				// Clear the spawn object list
-				ArrayList NewSpawnObjects = new ArrayList();
+				List<XmlSpawner.SpawnObject> NewSpawnObjects = new List<XmlSpawner.SpawnObject>();
 
 				if (ObjectList != null && ObjectList.Length > 0)
 				{
@@ -12523,7 +12593,7 @@ public static void _TraceEnd(int index)
 					}
 				}
 
-				return (SpawnObject[])NewSpawnObjects.ToArray(typeof(SpawnObject));
+				return NewSpawnObjects.ToArray();
 			}
 
 
@@ -12531,7 +12601,7 @@ public static void _TraceEnd(int index)
 			internal static SpawnObject[] LoadSpawnObjectsFromString2(string ObjectList)
 			{
 				// Clear the spawn object list
-				ArrayList NewSpawnObjects = new ArrayList();
+				List<XmlSpawner.SpawnObject> NewSpawnObjects = new List<XmlSpawner.SpawnObject>();
 
 				// spawn object definitions will take the form typestring:MX=int:SB=int:RT=double:TO=int:KL=int
 				// or typestring:MX=int:SB=int:RT=double:TO=int:KL=int:OBJ=typestring...
@@ -12642,7 +12712,7 @@ public static void _TraceEnd(int index)
 					}
 				}
 
-				return (SpawnObject[])NewSpawnObjects.ToArray(typeof(SpawnObject));
+				return NewSpawnObjects.ToArray();
 			}
 		}
 
