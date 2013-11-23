@@ -32,15 +32,15 @@ STEP 2: (recommended but not required)
 --------------------------------------
 To take advantage of the XmlQuest killtask keywords KILL and KILLNAMED, one line must be added to the OnDeath method in BaseCreature.cs as described below (note, you dont have to make this mod if you dont want to, the spawner and other items will work just fine without it, the KILL and KILLNAMED features simply wont do anything)
 
-around line 4172 of basecreature.cs change
+around line 4946 of basecreature.cs change
 
-Titles.AwardKarma( ds.m_Mobile, totalKarma, true );
+Titles.AwardKarma( titles[ i ], karma[ i ], true );
 
 to
 
-Titles.AwardKarma( ds.m_Mobile, totalKarma, true );
+Titles.AwardKarma( titles[ i ], karma[ i ], true );
 // modification to support XmlQuest Killtasks
-XmlQuest.RegisterKill( this, ds.m_Mobile);
+XmlQuest.RegisterKill( this, titles[ i ]);
 
 
 STEP 3: (NOT recommended but allowed)
@@ -88,7 +88,7 @@ STEP 6: (recommended but not required)
 To allow the XmlQuest killtask keywords KILL and KILLNAMED to be applied to players providing a contract kill system, one line must be added to ReportMurderer.cs (Scripts/Gumps/ReportMurderer.cs) as described below (note, you dont have to make this mod if you dont want to, the spawner and other items will work just fine without it, the KILL and KILLNAMED features simply wont work when specifying players as the targets).
 This is also required to allow the attachment system to register kills (through the OnKill or OnKilled methods).  Some addons such as XmlPoints require this.
 
-around line 64 of ReportMurderer.cs change
+around line 66 of ReportMurderer.cs change
 
 Titles.AwardKarma( g, karmaAward, true );
 
@@ -104,7 +104,7 @@ STEP 7: (recommended but not required)
 --------------------------------------
 To allow attachments to be triggered on weapon hits, one line must be added to BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) as described below (note, you dont have to make this mod if you dont want to, the spawner and other items will work just fine without it, the attachment OnWeaponHit method simply wont be called so attachments such as XmlMinionStrike will not work) 
 
-around line 1644 of BaseWeapon.cs at the end of the OnHit method, change
+around line 1756 of BaseWeapon.cs at the end of the OnHit method, change
 
 				if ( AnimalForm.UnderTransformation( defender, typeof( BullFrog ) ) )
 					attacker.ApplyPoison( defender, Poison.Regular );
@@ -117,8 +117,8 @@ to
 					attacker.ApplyPoison( defender, Poison.Regular );
 			}
 			// hook for attachment OnWeaponHit method
-			Server.Engines.XmlSpawner2.XmlAttach.OnWeaponHit(this, attacker, defender, damageGiven);
-		}		
+			Server.Engines.XmlSpawner2.XmlAttach.OnWeaponHit(this, attacker, defender, damageGiven, damage);
+		}
 
 
 STEP 8: (recommended but not required)
@@ -154,7 +154,7 @@ STEP 9: (recommended but not required)
 --------------------------------------
 To allow attachments to make use of the OnEquip and OnRemoved methods, the following 8 changes must be made in three files, BaseArmor.cs, BaseWeapon.cs, and BaseJewel.cs. (note, you dont have to make this mod if you dont want to, the spawner and other items/attachments will work just fine without it, you just wont be able to use certain attachments that make use of this feature such as XmlFactionEquip).
 
-around line 1202 of BaseArmor.cs (Scripts/Items/Armor/BaseArmor.cs) at the end of the CanEquip method change
+around line 1226 of BaseArmor.cs (Scripts/Items/Armor/BaseArmor.cs) at the end of the CanEquip method change
 
 	return base.CanEquip( from );
 
@@ -171,7 +171,7 @@ to
 	}
 
 
-around line 1241 of BaseArmor.cs (Scripts/Items/Armor/BaseArmor.cs) at the end of the OnEquip method change
+around line 1265 of BaseArmor.cs (Scripts/Items/Armor/BaseArmor.cs) at the end of the OnEquip method change
 
 
 	return base.OnEquip( from );
@@ -185,7 +185,7 @@ to
 	return base.OnEquip( from );
 
 
-around line 1273 of BaseArmor.cs (Scripts/Items/Armor/BaseArmor.cs) at the end of the OnRemoved method change
+around line 1286 of BaseArmor.cs (Scripts/Items/Armor/BaseArmor.cs) at the end of the OnRemoved method change
 
 
 	base.OnRemoved( parent );
@@ -198,7 +198,7 @@ to
 	base.OnRemoved( parent );
 
 
-around line 569 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) at the end of the CanEquip method change
+around line 605 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) at the end of the CanEquip method change
 
 			else if ( !from.CanBeginAction( typeof( BaseWeapon ) ) )
 			{
@@ -227,7 +227,7 @@ to
 				}
 
 
-around line 628 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) at the end of the OnEquip method change
+around line 659 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) at the end of the OnEquip method change
 
 	return true;
 
@@ -239,7 +239,7 @@ to
 	return true;
 
 
-around line 686 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) at the end of the OnRemoved method change
+around line 713 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) at the end of the OnRemoved method change
 
 			m.Delta( MobileDelta.WeaponDamage );
 		}
@@ -254,7 +254,7 @@ to
 	}
 
 
-around line 138 of BaseJewel.cs (Scripts/Items/Jewels/BaseJewel.cs) at the end of the OnAdded method change
+around line 170 of BaseJewel.cs (Scripts/Items/Jewels/BaseJewel.cs) at the end of the OnAdded method change
 
 			from.CheckStatTimers();
 		}
@@ -280,7 +280,7 @@ to
 	}
 
 
-around line 151 of BaseJewel.cs (Scripts/Items/Jewels/BaseJewel.cs) at the end of the OnRemoved method change
+around line 188 of BaseJewel.cs (Scripts/Items/Jewels/BaseJewel.cs) at the end of the OnRemoved method change
 
 			from.CheckStatTimers();
 		}
@@ -300,7 +300,7 @@ STEP 10: (recommended but not required)
 To allow attachments to make use of the OnArmorHit methods, the following changes must be made in BaseWeapon.cs.(note, you dont have to make this mod if you dont want to, the spawner and other items/attachments will work just fine without it, you just wont be able to use features of certain attachments that require this such as XmlCustomAttacks).
 
 
-at the beginning of the AbsorbDamageAOS method around line 1103 of BaseWeapon.cs  change
+at the beginning of the AbsorbDamageAOS method around line 1167 of BaseWeapon.cs  change
 
 		public virtual int AbsorbDamageAOS( Mobile attacker, Mobile defender, int damage )
 		{
@@ -314,7 +314,7 @@ to
 			int originaldamage = damage;
 
 
-in the AbsorbDamageAOS method around line 1142 of BaseWeapon.cs  change
+in the AbsorbDamageAOS method around line 1208 of BaseWeapon.cs  change
 
 		if ( shield != null )
 		{
@@ -332,12 +332,10 @@ to
 		}
 
 
-in the AbsorbDamageAOS method around line 1173 of BaseWeapon.cs  change
+in the AbsorbDamageAOS method around line 1234 of BaseWeapon.cs  change
 
 				if (armor != null)
-				{
 					armor.OnHit(this, damage); // call OnHit to lose durability
-				}
 			}
 
 			return damage;
@@ -360,7 +358,7 @@ to
 
 
 
-in the AbsorbDamage method around line 1210 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) change
+in the AbsorbDamage method around line 1272 of BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs) change
 
 
 	int virtualArmor = defender.VirtualArmor + defender.VirtualArmorMod;
@@ -380,7 +378,7 @@ STEP 11: (recommended but not required)
 ---------------------------------------
 To allow attachment properties on weapons/armor to be automatically displayed in the properties list on mouseover/click, these changes must be made to BaseWeapon.cs (Scripts/Items/Weapons/BaseWeapon.cs), BaseArmor.cs (Scripts/Items/Armor/BaseArmor.cs) and BaseJewel.cs (Scripts/Items/Jewels/BaseJewel.cs) described below. (note, you dont have to make this mod if you dont want to, the spawner and other items will work just fine without it, players just wont automatically see attachment properties on items with attachments).
 
-at the end of the GetProperties method around line 3246 of BaseWeapon.cs change
+at the end of the GetProperties method around line 3373 of BaseWeapon.cs change
 
 	if ( m_Hits > 0 && m_MaxHits > 0 )
 		list.Add( 1060639, "{0}\t{1}", m_Hits, m_MaxHits ); // durability ~1_val~ / ~2_val~
@@ -394,7 +392,7 @@ to
 	Server.Engines.XmlSpawner2.XmlAttach.AddAttachmentProperties(this, list);
 
 
-at the end of the GetProperties method around line 1518 of BaseArmor.cs change
+at the end of the GetProperties method around line 1546 of BaseArmor.cs change
 
 	if ( m_HitPoints > 0 && m_MaxHitPoints > 0 )
 		list.Add( 1060639, "{0}\t{1}", m_HitPoints, m_MaxHitPoints ); // durability ~1_val~ / ~2_val~
@@ -407,13 +405,17 @@ to
 	// mod to display attachment properties
 	Server.Engines.XmlSpawner2.XmlAttach.AddAttachmentProperties(this, list);
 
-at the end of the GetProperties method around line 226 of BaseJewel.cs change
+at the end of the GetProperties method around line 281 of BaseJewel.cs change
 
 
-	base.AddResistanceProperties( list );
+	if ( m_HitPoints >= 0 && m_MaxHitPoints > 0 )
+		list.Add( 1060639, "{0}\t{1}", m_HitPoints, m_MaxHitPoints ); // durability ~1_val~ / ~2_val~
+
 to
 
-	base.AddResistanceProperties( list );
+	if ( m_HitPoints >= 0 && m_MaxHitPoints > 0 )
+		list.Add( 1060639, "{0}\t{1}", m_HitPoints, m_MaxHitPoints ); // durability ~1_val~ / ~2_val~
+
 			
         // mod to display attachment properties
         Server.Engines.XmlSpawner2.XmlAttach.AddAttachmentProperties(this, list);
@@ -435,7 +437,7 @@ public virtual bool HoldSmartSpawning
 
 STEP 13: (recommended but not required)
 ---------------------------------------
-To fix a problem with lootpack generation under RunUO 2.0 using the LOOTPACK keyword, make this mod in Misc/LootPack.cs around line 571.  If you dont make this mod, you will not be able to use the LOOTPACK keyword.
+To fix a problem with lootpack generation under RunUO 2.0 using the LOOTPACK keyword, make this mod in Misc/LootPack.cs around line 570.  If you dont make this mod, you will not be able to use the LOOTPACK keyword.
 
         private static bool IsInTokuno(Mobile m)
         {
