@@ -1,5 +1,5 @@
 INSTALLATION:
-for RunUO 2.1
+for RunUO 2.4 or above
 
 BASIC INSTALLATION
 ------------------
