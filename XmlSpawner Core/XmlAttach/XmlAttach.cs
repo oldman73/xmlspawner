@@ -2273,7 +2273,7 @@ namespace Server.Engines.XmlSpawner2
 			}
 		}
 
-		public static void OnWeaponHit(BaseWeapon weapon, Mobile attacker, Mobile defender, ref int damage, int originalDamage)
+		public static void OnWeaponHit(BaseWeapon weapon, Mobile attacker, Mobile defender, int damage)
 		{
 			// look for attachments on the weapon
 			List<XmlAttachment> attachments = FindAttachments(weapon);

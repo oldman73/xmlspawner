@@ -117,7 +117,7 @@ to
 					attacker.ApplyPoison( defender, Poison.Regular );
 			}
 			// hook for attachment OnWeaponHit method
-			Server.Engines.XmlSpawner2.XmlAttach.OnWeaponHit(this, attacker, defender, damageGiven, damage);
+			Server.Engines.XmlSpawner2.XmlAttach.OnWeaponHit(this, attacker, defender, damageGiven);
 		}
 
 
