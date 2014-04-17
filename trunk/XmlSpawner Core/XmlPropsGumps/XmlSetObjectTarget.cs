@@ -15,7 +15,7 @@ namespace Server.Gumps
 		private PropertyInfo m_Property;
 		private Mobile m_Mobile;
 		private object m_Object;
-#if ServUO
+#if !ServUO
 		private Stack<StackEntry> m_Stack;
 #else
 		private Stack m_Stack;
@@ -24,7 +24,7 @@ namespace Server.Gumps
 		private int m_Page;
 		private ArrayList m_List;
 
-#if ServUO
+#if !ServUO
 		public XmlSetObjectTarget( PropertyInfo prop, Mobile mobile, object o, Stack<StackEntry> stack, Type type, int page, ArrayList list ) : base( -1, false, TargetFlags.None )
 #else
 		public XmlSetObjectTarget( PropertyInfo prop, Mobile mobile, object o, Stack stack, Type type, int page, ArrayList list ) : base( -1, false, TargetFlags.None )

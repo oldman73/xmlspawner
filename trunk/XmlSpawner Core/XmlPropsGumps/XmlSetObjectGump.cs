@@ -15,7 +15,7 @@ namespace Server.Gumps
 		private PropertyInfo m_Property;
 		private Mobile m_Mobile;
 		private object m_Object;
-#if ServUO
+#if !ServUO
 		private Stack<StackEntry> m_Stack;
 #else
 		private Stack m_Stack;
@@ -66,7 +66,7 @@ namespace Server.Gumps
 		private static readonly int BackWidth = BorderSize + TotalWidth + BorderSize;
 		private static readonly int BackHeight = BorderSize + TotalHeight + BorderSize;
 
-#if ServUO
+#if !ServUO
 		public XmlSetObjectGump( PropertyInfo prop, Mobile mobile, object o, Stack<StackEntry> stack, Type type, int page, ArrayList list ) : base( GumpOffsetX, GumpOffsetY )
 #else
 		public XmlSetObjectGump( PropertyInfo prop, Mobile mobile, object o, Stack stack, Type type, int page, ArrayList list ) : base( GumpOffsetX, GumpOffsetY )
@@ -151,7 +151,7 @@ namespace Server.Gumps
 			private PropertyInfo m_Property;
 			private Mobile m_Mobile;
 			private object m_Object;
-#if ServUO
+#if !ServUO
 			private Stack<StackEntry> m_Stack;
 #else
 			private Stack m_Stack;
@@ -160,7 +160,7 @@ namespace Server.Gumps
 			private int m_Page;
 			private ArrayList m_List;
 
-#if ServUO
+#if !ServUO
 			public InternalPrompt( PropertyInfo prop, Mobile mobile, object o, Stack<StackEntry> stack, Type type, int page, ArrayList list )
 #else
 			public InternalPrompt( PropertyInfo prop, Mobile mobile, object o, Stack stack, Type type, int page, ArrayList list )
