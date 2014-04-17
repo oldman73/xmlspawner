@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
 using Server;
 using Server.Network;
 using Server.Menus;
@@ -21,7 +22,11 @@ namespace Server.Gumps
 		private int m_Page;
 		private Mobile m_Mobile;
 		private object m_Object;
+#if ServUO
+		private Stack<StackEntry> m_Stack;
+#else
 		private Stack m_Stack;
+#endif
 
 		public static readonly bool OldStyle = PropsConfig.OldStyle;
 
@@ -88,7 +93,11 @@ namespace Server.Gumps
 			Initialize( 0 );
 		}
 
+		#if ServUO
+		public XmlPropertiesGump( Mobile mobile, object o, Stack<StackEntry> stack, StackEntry parent ) : base( GumpOffsetX, GumpOffsetY )
+		#else
 		public XmlPropertiesGump( Mobile mobile, object o, Stack stack, object parent ) : base( GumpOffsetX, GumpOffsetY )
+		#endif
 		{
 			m_Mobile = mobile;
 			m_Object = o;
@@ -98,7 +107,11 @@ namespace Server.Gumps
 			if ( parent != null )
 			{
 				if ( m_Stack == null )
+#if ServUO
+					m_Stack = new Stack<StackEntry>();
+#else
 					m_Stack = new Stack();
+#endif
 
 				m_Stack.Push( parent );
 			}
@@ -106,7 +119,11 @@ namespace Server.Gumps
 			Initialize( 0 );
 		}
 
+#if ServUO
+		public XmlPropertiesGump( Mobile mobile, object o, Stack<StackEntry> stack, ArrayList list, int page ) : base( GumpOffsetX, GumpOffsetY )
+#else
 		public XmlPropertiesGump( Mobile mobile, object o, Stack stack, ArrayList list, int page ) : base( GumpOffsetX, GumpOffsetY )
+#endif
 		{
 			m_Mobile = mobile;
 			m_Object = o;
@@ -242,9 +259,15 @@ namespace Server.Gumps
 				{
 					if ( m_Stack != null && m_Stack.Count > 0 )
 					{
+						#if ServUO
+						StackEntry entry = m_Stack.Pop();
+
+						from.SendGump( new XmlPropertiesGump( from, entry.m_Object, m_Stack, null ) );
+						#else
 						object obj = m_Stack.Pop();
 
 						from.SendGump( new XmlPropertiesGump( from, obj, m_Stack, null ) );
+						#endif
 					}
 
 					break;
@@ -308,8 +331,19 @@ namespace Server.Gumps
 							from.SendGump( new XmlPropertiesGump( from, m_Object, m_Stack, m_List, m_Page ) );
 							from.SendGump( new SkillsGump( from, (Mobile)m_Object ) );
 						}
-						else if ( HasAttribute( type, typeofPropertyObject, true ) )
+						else if( HasAttribute( type, typeofPropertyObject, true ) )
+						{
+#if ServUO
+							object obj = prop.GetValue( m_Object, null );
+
+							if ( obj != null )
+								from.SendGump( new XmlPropertiesGump( from, obj, m_Stack, new StackEntry( m_Object, prop ) ) );
+							else
+								from.SendGump( new XmlPropertiesGump( from, m_Object, m_Stack, m_List, m_Page ) );
+#else
 							from.SendGump( new XmlPropertiesGump( from, prop.GetValue( m_Object, null ), m_Stack, m_Object ) );
+#endif
+						}
 					}
 
 					break;
