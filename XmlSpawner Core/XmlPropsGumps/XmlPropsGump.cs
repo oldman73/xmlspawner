@@ -22,7 +22,7 @@ namespace Server.Gumps
 		private int m_Page;
 		private Mobile m_Mobile;
 		private object m_Object;
-#if ServUO
+#if !ServUO
 		private Stack<StackEntry> m_Stack;
 #else
 		private Stack m_Stack;
@@ -93,7 +93,7 @@ namespace Server.Gumps
 			Initialize( 0 );
 		}
 
-		#if ServUO
+		#if !ServUO
 		public XmlPropertiesGump( Mobile mobile, object o, Stack<StackEntry> stack, StackEntry parent ) : base( GumpOffsetX, GumpOffsetY )
 		#else
 		public XmlPropertiesGump( Mobile mobile, object o, Stack stack, object parent ) : base( GumpOffsetX, GumpOffsetY )
@@ -107,7 +107,7 @@ namespace Server.Gumps
 			if ( parent != null )
 			{
 				if ( m_Stack == null )
-#if ServUO
+#if !ServUO
 					m_Stack = new Stack<StackEntry>();
 #else
 					m_Stack = new Stack();
@@ -119,7 +119,7 @@ namespace Server.Gumps
 			Initialize( 0 );
 		}
 
-#if ServUO
+#if !ServUO
 		public XmlPropertiesGump( Mobile mobile, object o, Stack<StackEntry> stack, ArrayList list, int page ) : base( GumpOffsetX, GumpOffsetY )
 #else
 		public XmlPropertiesGump( Mobile mobile, object o, Stack stack, ArrayList list, int page ) : base( GumpOffsetX, GumpOffsetY )
@@ -259,7 +259,7 @@ namespace Server.Gumps
 				{
 					if ( m_Stack != null && m_Stack.Count > 0 )
 					{
-						#if ServUO
+						#if !ServUO
 						StackEntry entry = m_Stack.Pop();
 
 						from.SendGump( new XmlPropertiesGump( from, entry.m_Object, m_Stack, null ) );
@@ -333,7 +333,7 @@ namespace Server.Gumps
 						}
 						else if( HasAttribute( type, typeofPropertyObject, true ) )
 						{
-#if ServUO
+#if !ServUO
 							object obj = prop.GetValue( m_Object, null );
 
 							if ( obj != null )
