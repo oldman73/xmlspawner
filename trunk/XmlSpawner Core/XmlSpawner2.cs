@@ -1077,6 +1077,78 @@ namespace Server.Mobiles
 			}
 		}
 
+		[CommandProperty(AccessLevel.GameMaster)]
+		public Point3D X2_Y2
+		{
+			get { return new Point3D((m_X + m_Width), (m_Y + m_Height), Z); }
+			set
+			{
+				int X2;
+				int Y2;
+
+				int OriginalX2 = m_X + m_Width;
+				int OriginalY2 = m_Y + m_Height;
+
+				// reset the sector list
+				ResetSectorList();
+
+				// now determine based upon the entered coordinate values what the lower left corner is
+				// lower left will be the min x and min y
+				// upper right will be max x max y
+				if (value.X < OriginalX2)
+				{
+					// ok, this is the proper x value for the lower left
+					m_X = value.X;
+					X2 = OriginalX2;
+				}
+				else
+				{
+					m_X = OriginalX2;
+					X2 = value.X;
+				}
+
+				if (value.Y < OriginalY2)
+				{
+					// ok, this is the proper y value for the lower left
+					m_Y = value.Y;
+					Y2 = OriginalY2;
+				}
+				else
+				{
+					m_Y = OriginalY2;
+					Y2 = value.Y;
+				}
+
+				m_Width = X2 - m_X;
+				m_Height = Y2 - m_Y;
+
+				if (m_Width == m_Height)
+					m_SpawnRange = m_Width / 2;
+				else
+					m_SpawnRange = -1;
+
+				if (m_HomeRangeIsRelative == false)
+				{
+					int NewHomeRange = (m_Width > m_Height ? m_Height : m_Width);
+					m_HomeRange = (NewHomeRange > 0 ? NewHomeRange : 0);
+				}
+
+				//original test was for less than 1, changed it to less than zero (zero is a valid width, its the default in fact)
+				// Stop the spawner if the width or height is less than 1
+				if ((m_Width < 0) || (m_Height < 0))
+					Running = false;
+
+				InvalidateProperties();
+
+				// Check if the spawner is showing its bounds
+				if (ShowBounds == true)
+				{
+					ShowBounds = false;
+					ShowBounds = true;
+				}
+			}
+		}
+
 		// added the spawnrange property.  It sets both the XY and width/height parameters automatically.
 		// also doesnt mess with homerange like XY does
 		[CommandProperty(AccessLevel.GameMaster)]
@@ -1161,77 +1233,6 @@ namespace Server.Mobiles
 			}
 		}
 
-		[CommandProperty(AccessLevel.GameMaster)]
-		public Point3D X2_Y2
-		{
-			get { return new Point3D((m_X + m_Width), (m_Y + m_Height), Z); }
-			set
-			{
-				int X2;
-				int Y2;
-
-				int OriginalX2 = m_X + m_Width;
-				int OriginalY2 = m_Y + m_Height;
-
-				// reset the sector list
-				ResetSectorList();
-
-				// now determine based upon the entered coordinate values what the lower left corner is
-				// lower left will be the min x and min y
-				// upper right will be max x max y
-				if (value.X < OriginalX2)
-				{
-					// ok, this is the proper x value for the lower left
-					m_X = value.X;
-					X2 = OriginalX2;
-				}
-				else
-				{
-					m_X = OriginalX2;
-					X2 = value.X;
-				}
-
-				if (value.Y < OriginalY2)
-				{
-					// ok, this is the proper y value for the lower left
-					m_Y = value.Y;
-					Y2 = OriginalY2;
-				}
-				else
-				{
-					m_Y = OriginalY2;
-					Y2 = value.Y;
-				}
-
-				m_Width = X2 - m_X;
-				m_Height = Y2 - m_Y;
-
-				if (m_Width == m_Height)
-					m_SpawnRange = m_Width / 2;
-				else
-					m_SpawnRange = -1;
-
-				if (m_HomeRangeIsRelative == false)
-				{
-					int NewHomeRange = (m_Width > m_Height ? m_Height : m_Width);
-					m_HomeRange = (NewHomeRange > 0 ? NewHomeRange : 0);
-				}
-
-				//original test was for less than 1, changed it to less than zero (zero is a valid width, its the default in fact)
-				// Stop the spawner if the width or height is less than 1
-				if ((m_Width < 0) || (m_Height < 0))
-					Running = false;
-
-				InvalidateProperties();
-
-				// Check if the spawner is showing its bounds
-				if (ShowBounds == true)
-				{
-					ShowBounds = false;
-					ShowBounds = true;
-				}
-			}
-		}
 		/*
 		[CommandProperty(AccessLevel.GameMaster)]
 		public override string Name
@@ -4798,7 +4799,7 @@ public static void _TraceEnd(int index)
 								catch { }
 								OtherCount++;
 							}
-
+							
 							// Check if this spawner already exists
 							XmlSpawner OldSpawner = null;
 							foreach (Item i in World.Items.Values)
@@ -12185,7 +12186,8 @@ public static void _TraceEnd(int index)
 						m_Y = reader.ReadInt();
 						m_Width = reader.ReadInt();
 						m_Height = reader.ReadInt();
-						if (m_Width == m_Height)
+						//we HAVE to check if the area is even or if coordinates point to the original spawner, otherwise it's custom area!
+						if (m_Width == m_Height && (m_Width%2)==0 && (m_X+m_Width/2)==this.X && (m_Y+m_Height/2)==this.Y)
 							m_SpawnRange = m_Width / 2;
 						else
 							m_SpawnRange = -1;

@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
 using Server;
 using Server.Network;
 using Server.Commands;
@@ -13,7 +14,11 @@ namespace Server.Gumps
 		protected PropertyInfo m_Property;
 		protected Mobile m_Mobile;
 		protected object m_Object;
+#if ServUO
+		protected Stack<StackEntry> m_Stack;
+#else
 		protected Stack m_Stack;
+#endif
 		protected int m_Page;
 		protected ArrayList m_List;
 
@@ -68,7 +73,11 @@ namespace Server.Gumps
 
 		protected object[] m_Values;
 
+#if ServUO
+		public XmlSetListOptionGump( PropertyInfo prop, Mobile mobile, object o, Stack<StackEntry> stack, int propspage, ArrayList list, string[] names, object[] values ) : base( GumpOffsetX, GumpOffsetY )
+#else
 		public XmlSetListOptionGump( PropertyInfo prop, Mobile mobile, object o, Stack stack, int propspage, ArrayList list, string[] names, object[] values ) : base( GumpOffsetX, GumpOffsetY )
+#endif
 		{
 			m_Property = prop;
 			m_Mobile = mobile;
