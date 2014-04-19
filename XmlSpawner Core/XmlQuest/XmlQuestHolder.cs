@@ -503,7 +503,11 @@ namespace Server.Items
 				}
 		}
 
+#if(NEWPARENT)
+		public override void OnAdded(IEntity target)
+#else
 		public override void OnAdded(object target)
+#endif
 		{
 			base.OnAdded(target);
 

@@ -1,3 +1,4 @@
+//#define ServUO
 using System;
 using System.Text;
 using Server;
@@ -2368,7 +2369,7 @@ namespace Server.Engines.XmlSpawner2
 		{
 			Mobile from = state.Mobile;
 
-#if ServUO
+#if(ServUO || NEWTIMERS)
 			if (from.AccessLevel >= AccessLevel.GameMaster || Core.TickCount >= from.NextActionTime)
 #else
 			if (from.AccessLevel >= AccessLevel.GameMaster || DateTime.Now >= from.NextActionTime)

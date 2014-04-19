@@ -134,7 +134,7 @@ namespace Server.Engines.XmlSpawner2
 
         public override string OnIdentify(Mobile from)
         {
-            if (from == null || from.IsPlayer())
+            if (from == null || from.AccessLevel < AccessLevel.Counselor)
                 return null;
 
             if (this.Expiration > TimeSpan.Zero)

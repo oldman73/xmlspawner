@@ -1,5 +1,5 @@
 INSTALLATION:
-for RunUO 2.4 or above
+for RunUO 2.4 or above from official SVN (servuo see also the other included file!)
 
 BASIC INSTALLATION
 ------------------

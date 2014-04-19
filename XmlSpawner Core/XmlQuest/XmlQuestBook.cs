@@ -178,7 +178,11 @@ namespace Server.Items
         }
 
 
-        public override void OnAdded(object parent)
+#if(NEWPARENT)
+		public override void OnAdded(IEntity parent)
+#else
+		public override void OnAdded(object parent)
+#endif
         {
             base.OnAdded(parent);
     
