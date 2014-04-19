@@ -1,3 +1,5 @@
+//#define ServUO
+#if(ServUO)
 using System;
 using Server.Mobiles;
 
@@ -113,3 +115,4 @@ namespace Server.Engines.XmlSpawner2
         }
     }
 }
+#endif
