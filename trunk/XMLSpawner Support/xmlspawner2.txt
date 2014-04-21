@@ -1,4 +1,109 @@
 XmlSpawner2 v4.0
+
+--------------------
+updated 22/04/2014
+Fwiffo
+
+Moved some files to allow a user to remove certain unneeded portion of XmlSpawner (siege, mobfactions, etc) without too much hassle and no errors by compiler is such cases.
+
+Updated this file to match actual stage of changes.
+
+--------------------
+updated 19/04/2014
+Fwiffo
+
+this is an update for backward compatibility with official google code RunUO - for compatibility with ServUO and the checks for GitHUB RunUO by msturgil
+
+Please, always refer to the correct TXT files that match your case.
+
+--------------------
+updated 17/04/2014
+Fwiffo
+
+- fix in custom area reload error, if the area is a square, during load it's size would be halved and so on in each reload, to prevent this we check actual central point and we also check if the area is square or of irregular size.
+- by using the flag "ServUO" at compile time, (as defined in the original project found on servuo) you instruct to use the things found in there, so you don't have to edit almost anything inside...(Thanks to tindo on runuo for the additions and fix for ServUO)
+
+--------------------
+updated 21/11/2013
+Fwiffo
+
+BaseXmlSpawner.cs - Total conversion to generic Type
+Added TAKEGIVE and SETVALUE
+Added Disable TickReset to Xmlspawner, so at every tickm, if you choose so, the killcount won't decrement.
+Updated the XmlSpawnerGump so that every new added commands are viewable there (in the xmlspawner gump click HELP!
+Minor Fixes to other systems.
+
+Please, always rever to the HELP Gump in XmlSpawner for reviews on how a command can work, I have no time for examples
+
+--------------------
+updated 09/08/2013
+Fwiffo
+
+bugfix in autoreward with RewardAction!=null
+
+--------------------
+updated 07/08/2013
+Fwiffo
+
+Generic/Strongly typed List<T> conversion from arraylists in all XmlQuest/*
+
+Another joucy addon is the RewardAction in "XmlQuestHolder", in this string an action could be done to the player when completing the quest with "AutoReward" to true, playing a song, damage, teleporting, changes. all with the same XmlSpawner syntax, considering the invoker/trigger mobile as the owner of the questbook.
+
+Also a bugfix occurred during the screening of the code, questpoints where not correctly calculated for taking rewards and even if you remove the "CanSeeReward" from XmlQuestHolder, if the player had registered the macro or tried to sent a crafted packet with the correct button number, he could open the bag.
+The bag under the same XmlQuestHolder now is more secure, it doesn't allow item stacking, thus preventing to the player to stack gold with the gold present, or put other items, that will anyway vanish when completed, in the same bag.
+
+--------------------
+updated 21/07/2013
+Fwiffo
+
+Completely converted attachment system to use strongly typed List instead of ArrayList and Dictionary instead of Hashtable.
+
+Tried a conversion of XmlMobFactions/XmlDynamicFaction with the use of the same as above.
+
+Generic List<T> and Dictionary are better in those situation, were the gain in speed is way better than the old methods.
+
+Fix to a Cast exception in GetClientsInRange, since this call returns Netstate Type, not Mobile, also an original bug was found in PlayMusic, considering that netstate were directly casted as mobile, it could cause a server crash.
+
+--------------------
+updated 18/07/2013
+Fwiffo
+
+Fixed the use of name proptest, in case you want to allow a search and don't want to specify a name in property test, you can use the wildcard "*" (FOREACH - AMOUNTCARRIED and many others that will allow to input a name among other things):
+
+Example:
+FOREACH,PlayerMobile,*,3/DAMAGE,100
+
+Will do 100 damage to all playermobiles in a range of three, the * will match any name
+FOREACH,Item,,3/Name/New Name
+Will get any Item in a range of three whose name is "null" in the property test, and will rename them to "New Name".
+
+
+Modified and fixed a bug in SETONPETS:
+
+Before:
+SETONPETS,range/prop/value/prop/value...
+but it wouldn't work, since the checkname, with a value of null, wasn't valid (and you couldn't modify it!)
+
+Now:
+SETONPETS,range[,name]/prop/value/prop/value...
+If you don't specify a name, any name will match, if you input a *, also, any name will match, an empty name will match only pets with "null" name in property.
+
+
+Modified the PLAYERSINRANGE, so instead of searching for any mobile and checking if they are players, it will search for any active client (logged in player, that's it).
+
+--------------------
+updated 13/07/2013
+Fwiffo
+
+Changed QuestLogGump in XMLQuestLogGump because of name conflicts with RunUO source from SVN.
+
+In XmlSpawner2.cs fixed the SpawnerBounds, that returned a smaller area than the real one of the spawner, this only affected FOREACH command.
+
+Fixed an old bug in XmlDialog, where an NPC with LockedConversation selected, if it starts a conversation and then waits for input from the user, another user giving speech for that input could obtain, in case of successful eventual checks, the control of the subsequent input, now this is checked, so LockedConversation makes more sense.
+
+Added some extras found in the web, they were not checked for any bugs, so, if you plan on using them, be warned that they may cause server instability, TEST THEM at your own risk!
+
+-------------------
 updated 11/7/2013
 Fwiffo
 
@@ -12,7 +117,7 @@ this is an absurd case, but if you're making LARGE use of IF/SPAWN/WHILE it CAN 
 
 Other bugfixes where made in the meantime, some required major changes in the structure, but compatibility with older xmlspawner system was always the first thing in mind, so no changes are required on the user side.
 
-MODIFYCATIONS
+MODIFICATIONS
 The GET Keyword, used inside an XMLSPAWNER, can get the property of the SETITEM, if that is set, in a way like this:
 
 GET,SETITEM,property by using SETITEM capitalized, if you use Setitem or setitem, it will work like in the old way, will search for the item name. This is to speedup uses of the setitem in conditional/complicated spawners that make use of the SETITEM, allowing to get properties on them easily.
