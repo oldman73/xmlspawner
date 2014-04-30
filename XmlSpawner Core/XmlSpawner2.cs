@@ -6423,6 +6423,10 @@ public static void _TraceEnd(int index)
 							try { SpawnSmartSpawning = bool.Parse((string)dr["SmartSpawning"]); }
 							catch { }
 
+							bool TickReset = false;
+							try { TickReset = bool.Parse((string)dr["TickReset"]); }
+							catch { }
+
 							string SpawnObjectPropertyName = null;
 							try { SpawnObjectPropertyName = (string)dr["ObjectPropertyName"]; }
 							catch { }
@@ -6603,6 +6607,7 @@ public static void _TraceEnd(int index)
 									SpawnSpeechTrigger, SpawnMobTriggerName, SpawnMobPropertyName, SpawnPlayerPropertyName, SpawnTriggerProbability,
 									SpawnSetPropertyItem, SpawnIsGroup, SpawnTODMode, SpawnKillReset, SpawnExternalTriggering, SpawnSequentialSpawning,
 									SpawnRegionName, SpawnAllowGhost, SpawnAllowNPC, SpawnSpawnOnTrigger, SpawnConfigFile, SpawnDespawnTime, SpawnSkillTrigger, SpawnSmartSpawning, SpawnWaypoint);
+								TheSpawn.m_DisableGlobalAutoReset=TickReset;
 								//TheSpawn.Group = SpawnIsGroup;\
 
 								string fromname = null;
@@ -7335,6 +7340,7 @@ public static void _TraceEnd(int index)
 			ds.Tables[SpawnTablePointName].Columns.Add("SpawnOnTrigger");
 			ds.Tables[SpawnTablePointName].Columns.Add("ConfigFile");
 			ds.Tables[SpawnTablePointName].Columns.Add("SmartSpawning");
+			ds.Tables[SpawnTablePointName].Columns.Add("TickReset");
 
 			ds.Tables[SpawnTablePointName].Columns.Add("WayPoint");
 			ds.Tables[SpawnTablePointName].Columns.Add("Team");
@@ -7473,6 +7479,7 @@ public static void _TraceEnd(int index)
 				dr["SpawnOnTrigger"] = sp.m_SpawnOnTrigger;
 				dr["ConfigFile"] = sp.m_ConfigFile;
 				dr["SmartSpawning"] = sp.m_SmartSpawning;
+				dr["TickReset"] = sp.m_DisableGlobalAutoReset;
 
 				dr["SpeechTrigger"] = sp.m_SpeechTrigger;
 				dr["SkillTrigger"] = sp.m_SkillTrigger;
