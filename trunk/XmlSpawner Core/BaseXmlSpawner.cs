@@ -1998,7 +1998,7 @@ namespace Server.Mobiles
 								{
 //                                	if(singlearglist[1].Length>0 && singlearglist[1][0]=='/')
 //                                		singlearglist[1].Remove(0, 1);
-									remainder = string.Join(literalend[0].ToString(), singlearglist, 1, singlearglist.Length - 1);
+									remainder = singlearglist[1];
 								}
 								else
 								{
@@ -4008,7 +4008,7 @@ namespace Server.Mobiles
 								{
 //                                	if(singlearglist[1].Length>0 && singlearglist[1][0]=='/')
 //                                		singlearglist[1].Remove(0, 1);
-									remainder = string.Join(literalend[0].ToString(), singlearglist, 1, singlearglist.Length - 1);
+									remainder = singlearglist[1];
 								}
 								else
 								{
@@ -7636,7 +7636,7 @@ namespace Server.Mobiles
 
 			str = str.Trim();
 
-			args = str.Split(literalend);
+			args = str.Split(literalend, 2);
 
 			return args;
 		}
